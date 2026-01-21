@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ติดตามรถกอล์ฟไฟฟ้า (Lopburi Factory)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --bg-color: #f4f7f6;
+            --timeline-color: #ddd;
+            --station-text: #333;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin: 0 0 15px 0;
+            color: var(--primary-color);
+        }
+
+        /* นาฬิกาแบบ Realtime */
+        .realtime-clock {
+            text-align: center;
+            background: #2c3e50;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .clock-time {
+            font-size: 2em;
+            font-weight: bold;
+            letter-spacing: 2px;
+            line-height: 1;
+        }
+        .clock-date {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        /* ส่วนเลือกสถานี */
+        .control-panel {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        select {
+            padding: 12px;
+            font-size: 18px;
+            border-radius: 8px;
+            border: 2px solid #ccc;
+            width: 100%;
+            background: white;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        /* ปุ่มกดตรวจสอบ */
+        .check-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0,123,255,0.3);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .check-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 4px rgba(0,123,255,0.2);
+        }
+
+        /* การ์ดแสดงผลลัพธ์ (ซ่อนไว้ก่อน) */
+        .result-panel {
+            display: none; /* ซ่อนเป็น Default */
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .status-card {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #bee5eb;
+        }
+        
+        .status-card.waiting { background: #fff3cd; color: #856404; border-color: #ffeeba; }
+        .status-card.break { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+
+        .eta-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 8px;
+        }
+
+        .list-header {
+            display: flex;
+            padding-left: 55px; 
+            padding-right: 0;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.95em;
+            border-bottom: 2px solid #eee;
+        }
+        .col-name { flex-grow: 1; }
+        .col-time { min-width: 45px; text-align: center; }
+
+        /* Timeline Styles */
+        .timeline-container {
+            position: relative;
+            padding-left: 30px;
+            margin-top: 10px;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            bottom: 15px;
+            width: 4px;
+            background: var(--timeline-color);
+            border-radius: 2px;
+            z-index: 0;
+        }
+
+        .station-item {
+            position: relative;
+            padding: 12px 0 12px 25px;
+            display: flex;
+            align-items: center;
+            z-index: 1;
+            border-bottom: 1px dashed #eee;
+        }
+
+        .dot {
+            position: absolute;
+            left: -22px; 
+            width: 12px;
+            height: 12px;
+            background: white;
+            border: 3px solid var(--timeline-color);
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        
+        .station-item.passed .dot { background: var(--timeline-color); border-color: var(--timeline-color); }
+        
+        .station-name { font-size: 15px; color: var(--station-text); flex-grow: 1; }
+        .station-time { font-size: 13px; color: #666; background: #f0f0f0; padding: 2px 8px; border-radius: 10px; min-width: 45px; text-align: center; }
+
+        .station-item.user-selected {
+            background-color: rgba(0, 123, 255, 0.1);
+            border-radius: 5px;
+            border-bottom: 1px solid rgba(0, 123, 255, 0.2);
+        }
+        .station-item.user-selected .station-name { font-weight: bold; color: var(--primary-color); }
+
+        .golf-cart-marker {
+            position: absolute;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            background: var(--success-color); 
+            border: 3px solid white; 
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3), 0 3px 6px rgba(0,0,0,0.2);
+            z-index: 10;
+            transition: top 1s linear;
+        }
+        
+        .golf-cart-marker::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            border-radius: 50%;
+            background: rgba(40, 167, 69, 0.4);
+            opacity: 0;
+            animation: pulse 2s infinite;
+            z-index: -1;
+            transform-origin: center;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.5); opacity: 0.8; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        
+        .footer-note { margin-top: 30px; font-size: 12px; color: #999; text-align: center; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🚌 รถไฟฟ้าโรงงานลพบุรี</h2>
+    
+    <div class="realtime-clock">
+        <div class="clock-time" id="clockTime">00:00:00</div>
+        <div class="clock-date" id="clockDate">-</div>
+    </div>
+    
+    <div class="control-panel">
+        <label for="userStation">📍 คุณรออยู่ที่สถานีไหน?</label>
+        <select id="userStation">
+            <!-- JS จะสร้างตัวเลือก -->
+        </select>
+        
+        <button class="check-btn" onclick="activateTracker()">
+            <span>🔍 ตรวจสอบรอบรถ</span>
+        </button>
+    </div>
+
+    <div id="resultPanel" class="result-panel">
+        <div id="statusCard" class="status-card">
+            <div id="statusTitle">กำลังโหลดข้อมูล...</div>
+            <div id="etaText" class="eta-display">--</div>
+        </div>
+        
+        <div class="list-header">
+            <div class="col-name">ชื่อสถานี</div>
+            <div class="col-time">เวลา</div>
+        </div>
+
+        <div class="timeline-container" id="timelineContainer">
+            <div class="timeline-line"></div>
+            <div id="golfCart" class="golf-cart-marker" style="display: none;"></div>
+            <div id="stationsList"></div>
+        </div>
+    </div>
+    
+    <div class="footer-note">
+        *เวลาอาจคลาดเคลื่อนตามสภาพการจราจร<br>
+        พักเบรครถช่วง 14:35 - 15:35 น.
+    </div>
+</div>
+
+<script>
+    const STATIONS = [
+        "👮 ป้อม-1", "ℹ️ Infor-1", "👮 ป้อม-2/1", "ℹ️ Infor-3", "👮 ป้อม-3", 
+        "🏭 Press / New Warehouse", "👔 OE", "⚙️ IM", "🏗️ Phase 8", "🏢 6/1", 
+        "🏢 6/2", "🏗️ Phase 5", "🔩 Rod End", "🚒 ดับเพลิง / ห้องสัมมนา / Automate", "🏁 โรงรถ"
+    ];
+
+    const ROUND_STARTS = [
+        "08:04", "08:45", "09:25", "10:05", "10:45", "11:25", 
+        "12:05", "12:45", "13:25", "14:05", "15:35", "16:15"
+    ];
+
+    const MINUTES_PER_STATION = 2;
+    let isTrackingActive = false;
+
+    function init() {
+        renderStations();
+        updateClock();
+        setInterval(updateClock, 1000);
+        setInterval(updateSystem, 1000);
+
+        // --- เพิ่มฟังก์ชันอ่านค่าจาก QR Code ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const stationParam = urlParams.get('s'); // อ่านค่า ?s=...
+        
+        if (stationParam !== null) {
+            // ถ้ามีค่า s มาในลิงก์ ให้เลือกสถานีนั้นแล้วกดปุ่มตรวจสอบทันที
+            const stationIndex = parseInt(stationParam);
+            if (!isNaN(stationIndex) && stationIndex >= 0 && stationIndex < STATIONS.length) {
+                document.getElementById('userStation').value = stationIndex;
+                activateTracker(); // กดปุ่มให้เลยอัตโนมัติ
+            }
+        }
+    }
+
+    function activateTracker() {
+        isTrackingActive = true;
+        document.getElementById('resultPanel').style.display = 'block';
+        updateSystem();
+        document.getElementById('resultPanel').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function updateClock() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('th-TH', { hour12: false });
+        const dateStr = now.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        document.getElementById('clockTime').innerText = timeStr;
+        document.getElementById('clockDate').innerText = dateStr;
+    }
+
+    function renderStations() {
+        const list = document.getElementById('stationsList');
+        const select = document.getElementById('userStation');
+        
+        STATIONS.forEach((name, index) => {
+            const item = document.createElement('div');
+            item.className = 'station-item';
+            item.id = `station-${index}`;
+            item.innerHTML = `
+                <div class="dot"></div>
+                <div class="station-name">${name}</div>
+                <div class="station-time" id="time-${index}">--:--</div>
+            `;
+            list.appendChild(item);
+
+            const option = document.createElement('option');
+            option.value = index;
+            option.text = name;
+            select.appendChild(option);
+        });
+        select.value = 0;
+    }
+
+    function updateSystem() {
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        const currentSeconds = now.getSeconds();
+
+        const roundTimesInMinutes = ROUND_STARTS.map(t => {
+            const [h, m] = t.split(':').map(Number);
+            return h * 60 + m;
+        });
+
+        let activeRoundIndex = -1;
+        let nextRoundIndex = -1;
+        let state = "WAITING"; 
+
+        for (let i = 0; i < roundTimesInMinutes.length; i++) {
+            const startT = roundTimesInMinutes[i];
+            const endT = startT + (STATIONS.length - 1) * MINUTES_PER_STATION;
+
+            if (currentTime >= startT && currentTime < endT) {
+                activeRoundIndex = i;
+                state = "RUNNING";
+                break;
+            } else if (currentTime < startT) {
+                nextRoundIndex = i;
+                state = "WAITING";
+                break;
+            }
+        }
+
+        if (currentTime >= 875 && currentTime < 935) state = "BREAK";
+        
+        const lastRoundEnd = roundTimesInMinutes[roundTimesInMinutes.length-1] + (STATIONS.length - 1) * MINUTES_PER_STATION;
+        if (currentTime >= lastRoundEnd) state = "END";
+
+        if (isTrackingActive) {
+            updateUI(state, activeRoundIndex, nextRoundIndex, currentTime, currentSeconds, roundTimesInMinutes);
+        }
+    }
+
+    function updateUI(state, activeIdx, nextIdx, currentTime, currentSeconds, roundStarts) {
+        const statusCard = document.getElementById('statusCard');
+        const statusTitle = document.getElementById('statusTitle');
+        const etaText = document.getElementById('etaText');
+        const golfCart = document.getElementById('golfCart');
+        const userStationIdx = parseInt(document.getElementById('userStation').value);
+
+        document.querySelectorAll('.station-item').forEach(el => {
+            el.classList.remove('active', 'passed', 'current', 'user-selected');
+        });
+        
+        const selectedEl = document.getElementById(`station-${userStationIdx}`);
+        if(selectedEl) selectedEl.classList.add('user-selected');
+
+        if (state === "BREAK") {
+            statusCard.className = "status-card break";
+            const nextRoundStart = 935;
+            const diff = nextRoundStart - currentTime;
+            statusTitle.innerHTML = "⛔ <b>พักเบรครถ</b> (เริ่มรอบถัดไป 15:35)";
+            etaText.innerHTML = `อีก <span style="font-size:1.2em; color:#721c24;">${diff} นาที</span> รถจะออกจากต้นทาง`;
+            const arrivalAtUser = nextRoundStart + (userStationIdx * MINUTES_PER_STATION);
+            const diffUser = arrivalAtUser - currentTime;
+            if (diffUser > diff) etaText.innerHTML += `<br><span style="font-size:0.7em; color:#666;">(ถึงจุดที่คุณรอในอีก ${diffUser} นาที)</span>`;
+            golfCart.style.display = "none";
+            updateStationTimes(nextRoundStart);
+            return;
+        }
+        
+        if (state === "END") {
+            statusCard.className = "status-card waiting";
+            statusTitle.innerText = "😴 จบการเดินรถวันนี้";
+            etaText.innerText = "พบกันใหม่พรุ่งนี้ 08:04 น.";
+            golfCart.style.display = "none";
+            clearStationTimes();
+            return;
+        }
+
+        if (state === "WAITING") {
+            statusCard.className = "status-card waiting";
+            if (nextIdx !== -1) {
+                const nextTime = roundStarts[nextIdx];
+                const diff = nextTime - currentTime;
+                statusTitle.innerText = `⏳ รถจอดรออยู่ที่ ${STATIONS[0]}`;
+                etaText.innerHTML = `อีก <span style="font-size:1.2em; color:#d63384;">${diff} นาที</span> รถจะออกจากต้นทาง`;
+                golfCart.style.display = "flex";
+                golfCart.style.top = "15px"; 
+                const arrivalAtUser = nextTime + (userStationIdx * MINUTES_PER_STATION);
+                const diffUser = arrivalAtUser - currentTime;
+                if (diffUser > diff) etaText.innerHTML += `<br><span style="font-size:0.7em; color:#666;">(ถึงจุดที่คุณรอในอีก ${diffUser} นาที)</span>`;
+                updateStationTimes(roundStarts[nextIdx]);
+            }
+            return;
+        }
+
+        if (state === "RUNNING") {
+            statusCard.className = "status-card";
+            const startTime = roundStarts[activeIdx];
+            const elapsedMinutes = (currentTime - startTime) + (currentSeconds / 60);
+            let carPos = elapsedMinutes / MINUTES_PER_STATION;
+            if (carPos >= STATIONS.length - 1) carPos = STATIONS.length - 1;
+
+            const stationHeight = document.querySelector('.station-item').offsetHeight || 57;
+            const topPos = 15 + (carPos * stationHeight); 
+            golfCart.style.display = "block"; 
+            golfCart.style.top = `${topPos}px`;
+
+            const currentStationInt = Math.floor(carPos);
+            for(let i=0; i < currentStationInt; i++) {
+                document.getElementById(`station-${i}`).classList.add('passed');
+            }
+
+            statusTitle.innerHTML = `🟢 <b>รถกำลังวิ่ง</b> (รอบ ${ROUND_STARTS[activeIdx]})`;
+            
+            const arrivalTime = startTime + (userStationIdx * MINUTES_PER_STATION);
+            const minutesLeft = arrivalTime - currentTime;
+
+            if (currentTime < arrivalTime) {
+                etaText.innerHTML = `อีก <span style="font-size:1.4em; color:#0056b3;">${minutesLeft} นาที</span><br>รถจะมาถึงคุณ`;
+            } else if (currentTime === arrivalTime) {
+                etaText.innerHTML = `<span style="color:#dc3545;">รถมาถึงสถานีคุณแล้ว!</span>`;
+            } else {
+                etaText.innerHTML = `<span style="color:#6c757d;">รถผ่านสถานีคุณไปแล้ว</span><br><small>รอรอบถัดไปนะครับ</small>`;
+            }
+            updateStationTimes(startTime);
+        }
+    }
+
+    function updateStationTimes(startTimeInMinutes) {
+        STATIONS.forEach((_, idx) => {
+            const timeVal = startTimeInMinutes + (idx * MINUTES_PER_STATION);
+            const h = Math.floor(timeVal / 60);
+            const m = timeVal % 60;
+            const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            document.getElementById(`time-${idx}`).innerText = timeStr;
+        });
+    }
+
+    function clearStationTimes() {
+        STATIONS.forEach((_, idx) => {
+            document.getElementById(`time-${idx}`).innerText = "--:--";
+        });
+    }
+
+    init();
+</script>
+
+</body>
+</html>
