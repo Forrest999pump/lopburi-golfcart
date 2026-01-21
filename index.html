@@ -8,11 +8,13 @@
     <style>
         :root {
             --primary-color: #007bff;
+            --secondary-color: #6c757d;
             --bg-color: #f4f7f6;
             --timeline-color: #ddd;
             --station-text: #333;
             --success-color: #28a745;
             --danger-color: #dc3545;
+            --warning-bg: #fff3cd;
         }
 
         body {
@@ -30,6 +32,7 @@
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
         }
 
         h2 {
@@ -48,17 +51,8 @@
             margin-bottom: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .clock-time {
-            font-size: 2em;
-            font-weight: bold;
-            letter-spacing: 2px;
-            line-height: 1;
-        }
-        .clock-date {
-            font-size: 0.9em;
-            opacity: 0.8;
-            margin-top: 5px;
-        }
+        .clock-time { font-size: 2em; font-weight: bold; letter-spacing: 2px; line-height: 1; }
+        .clock-date { font-size: 0.9em; opacity: 0.8; margin-top: 5px; }
 
         /* ส่วนเลือกสถานี */
         .control-panel {
@@ -69,12 +63,7 @@
             text-align: center;
         }
         
-        label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 8px;
-            font-size: 1.1em;
-        }
+        label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 1.1em; }
 
         select {
             padding: 12px;
@@ -87,35 +76,48 @@
             cursor: pointer;
         }
 
-        /* ปุ่มกดตรวจสอบ */
-        .check-btn {
-            background-color: var(--primary-color);
-            color: white;
+        /* กลุ่มปุ่มกด */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+        }
+
+        .check-btn, .schedule-btn {
             border: none;
-            padding: 12px 30px;
-            font-size: 18px;
+            padding: 12px;
+            font-size: 16px;
             font-weight: bold;
             border-radius: 30px;
             cursor: pointer;
             width: 100%;
-            box-shadow: 0 4px 6px rgba(0,123,255,0.3);
             transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
         }
-        .check-btn:active {
-            transform: scale(0.98);
-            box-shadow: 0 2px 4px rgba(0,123,255,0.2);
-        }
 
-        /* การ์ดแสดงผลลัพธ์ (ซ่อนไว้ก่อน) */
+        .check-btn {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,123,255,0.3);
+            font-size: 18px;
+        }
+        .check-btn:active { transform: scale(0.98); }
+
+        .schedule-btn {
+            background-color: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+        .schedule-btn:hover { background-color: #f0f8ff; }
+
+        /* ผลลัพธ์ */
         .result-panel {
-            display: none; /* ซ่อนเป็น Default */
+            display: none;
             animation: fadeIn 0.5s;
         }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -126,11 +128,10 @@
             color: #0c5460;
             padding: 20px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             text-align: center;
             border: 1px solid #bee5eb;
         }
-        
         .status-card.waiting { background: #fff3cd; color: #856404; border-color: #ffeeba; }
         .status-card.break { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
 
@@ -143,10 +144,25 @@
             border-radius: 8px;
         }
 
+        /* ข้อมูลรอบถัดไป (Next Round Info) */
+        .next-round-info {
+            background: #f8f9fa;
+            border-left: 5px solid var(--secondary-color);
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #555;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .next-round-info strong { color: var(--primary-color); font-size: 1.1em; }
+
+        /* Timeline */
         .list-header {
             display: flex;
             padding-left: 55px; 
-            padding-right: 0;
             margin-bottom: 5px;
             padding-bottom: 5px;
             font-weight: bold;
@@ -157,44 +173,21 @@
         .col-name { flex-grow: 1; }
         .col-time { min-width: 45px; text-align: center; }
 
-        /* Timeline Styles */
-        .timeline-container {
-            position: relative;
-            padding-left: 30px;
-            margin-top: 10px;
-        }
-
+        .timeline-container { position: relative; padding-left: 30px; margin-top: 10px; }
         .timeline-line {
-            position: absolute;
-            left: 15px;
-            top: 15px;
-            bottom: 15px;
-            width: 4px;
-            background: var(--timeline-color);
-            border-radius: 2px;
-            z-index: 0;
+            position: absolute; left: 15px; top: 15px; bottom: 15px;
+            width: 4px; background: var(--timeline-color); border-radius: 2px; z-index: 0;
         }
-
         .station-item {
-            position: relative;
-            padding: 12px 0 12px 25px;
-            display: flex;
-            align-items: center;
-            z-index: 1;
+            position: relative; padding: 12px 0 12px 25px;
+            display: flex; align-items: center; z-index: 1;
             border-bottom: 1px dashed #eee;
         }
-
         .dot {
-            position: absolute;
-            left: -22px; 
-            width: 12px;
-            height: 12px;
-            background: white;
-            border: 3px solid var(--timeline-color);
-            border-radius: 50%;
+            position: absolute; left: -22px; width: 12px; height: 12px;
+            background: white; border: 3px solid var(--timeline-color); border-radius: 50%;
             transition: all 0.3s;
         }
-        
         .station-item.passed .dot { background: var(--timeline-color); border-color: var(--timeline-color); }
         
         .station-name { font-size: 15px; color: var(--station-text); flex-grow: 1; }
@@ -208,39 +201,51 @@
         .station-item.user-selected .station-name { font-weight: bold; color: var(--primary-color); }
 
         .golf-cart-marker {
-            position: absolute;
-            left: 3px;
-            width: 22px;
-            height: 22px;
-            background: var(--success-color); 
-            border: 3px solid white; 
-            border-radius: 50%;
+            position: absolute; left: 3px; width: 22px; height: 22px;
+            background: var(--success-color); border: 3px solid white; border-radius: 50%;
             box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3), 0 3px 6px rgba(0,0,0,0.2);
-            z-index: 10;
-            transition: top 1s linear;
+            z-index: 10; transition: top 1s linear;
         }
-        
         .golf-cart-marker::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            border-radius: 50%;
-            background: rgba(40, 167, 69, 0.4);
-            opacity: 0;
-            animation: pulse 2s infinite;
-            z-index: -1;
-            transform-origin: center;
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            border-radius: 50%; background: rgba(40, 167, 69, 0.4); opacity: 0;
+            animation: pulse 2s infinite; z-index: -1; transform-origin: center;
         }
-
-        @keyframes pulse {
-            0% { transform: scale(0.5); opacity: 0.8; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
+        @keyframes pulse { 0% { transform: scale(0.5); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
         
         .footer-note { margin-top: 30px; font-size: 12px; color: #999; text-align: center; }
+
+        /* ================= MODAL ตารางเวลา ================= */
+        .modal {
+            display: none; 
+            position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; 
+            background-color: rgba(0,0,0,0.5); 
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            background-color: #fefefe; margin: 10% auto; padding: 0; border-radius: 15px;
+            width: 90%; max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: relative;
+            max-height: 80vh; display: flex; flex-direction: column;
+        }
+        .modal-header {
+            padding: 15px 20px; background: var(--primary-color); color: white;
+            border-radius: 15px 15px 0 0; display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 { margin: 0; font-size: 1.2em; }
+        .close-btn { color: white; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; }
+        
+        .modal-body { padding: 15px; overflow-y: auto; }
+        
+        .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .schedule-table th, .schedule-table td {
+            padding: 10px; text-align: center; border-bottom: 1px solid #ddd;
+        }
+        .schedule-table th { background: #f8f9fa; color: #555; position: sticky; top: 0; }
+        .schedule-table tr.past { color: #aaa; background: #fafafa; }
+        .schedule-table tr.upcoming { color: #333; font-weight: bold; background: #e8f4ff; }
+        .schedule-table tr.break { background: #ffeeba; color: #856404; }
 
     </style>
 </head>
@@ -260,15 +265,26 @@
             <!-- JS จะสร้างตัวเลือก -->
         </select>
         
-        <button class="check-btn" onclick="activateTracker()">
-            <span>🔍 ตรวจสอบรอบรถ</span>
-        </button>
+        <div class="btn-group">
+            <button class="check-btn" onclick="activateTracker()">
+                <span>🔍 ตรวจสอบรอบรถปัจจุบัน</span>
+            </button>
+            <button class="schedule-btn" onclick="openSchedule()">
+                <span>📅 ดูตารางเดินรถทั้งหมด</span>
+            </button>
+        </div>
     </div>
 
     <div id="resultPanel" class="result-panel">
         <div id="statusCard" class="status-card">
             <div id="statusTitle">กำลังโหลดข้อมูล...</div>
             <div id="etaText" class="eta-display">--</div>
+        </div>
+
+        <!-- กล่องบอกรอบถัดไป -->
+        <div id="nextRoundContainer" class="next-round-info" style="display:none;">
+            <span>⏭ รอบถัดไปจะมาถึงนี่:</span>
+            <strong id="nextRoundTime">--:--</strong>
         </div>
         
         <div class="list-header">
@@ -289,7 +305,37 @@
     </div>
 </div>
 
+<!-- Modal ตารางเดินรถ -->
+<div id="scheduleModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">ตารางเดินรถ</h3>
+            <span class="close-btn" onclick="closeSchedule()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div style="font-size: 0.9em; color: #666; margin-bottom: 10px; text-align: center;">
+                เวลาที่รถจะมาถึงสถานี: <strong id="modalStationName" style="color: var(--primary-color);">--</strong>
+            </div>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>รอบที่</th>
+                        <th>เวลามาถึง</th>
+                        <th>สถานะ</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleTableBody">
+                    <!-- JS generated rows -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <script>
+    // ==========================================
+    // 1. Config
+    // ==========================================
     const STATIONS = [
         "👮 ป้อม-1", "ℹ️ Infor-1", "👮 ป้อม-2/1", "ℹ️ Infor-3", "👮 ป้อม-3", 
         "🏭 Press / New Warehouse", "👔 OE", "⚙️ IM", "🏗️ Phase 8", "🏢 6/1", 
@@ -304,22 +350,24 @@
     const MINUTES_PER_STATION = 2;
     let isTrackingActive = false;
 
+    // ==========================================
+    // 2. Logic
+    // ==========================================
+
     function init() {
         renderStations();
         updateClock();
         setInterval(updateClock, 1000);
         setInterval(updateSystem, 1000);
 
-        // --- เพิ่มฟังก์ชันอ่านค่าจาก QR Code ---
+        // Smart QR Logic
         const urlParams = new URLSearchParams(window.location.search);
-        const stationParam = urlParams.get('s'); // อ่านค่า ?s=...
-        
+        const stationParam = urlParams.get('s');
         if (stationParam !== null) {
-            // ถ้ามีค่า s มาในลิงก์ ให้เลือกสถานีนั้นแล้วกดปุ่มตรวจสอบทันที
             const stationIndex = parseInt(stationParam);
             if (!isNaN(stationIndex) && stationIndex >= 0 && stationIndex < STATIONS.length) {
                 document.getElementById('userStation').value = stationIndex;
-                activateTracker(); // กดปุ่มให้เลยอัตโนมัติ
+                activateTracker();
             }
         }
     }
@@ -376,12 +424,15 @@
         let nextRoundIndex = -1;
         let state = "WAITING"; 
 
+        // หา Active และ Next Round
         for (let i = 0; i < roundTimesInMinutes.length; i++) {
             const startT = roundTimesInMinutes[i];
             const endT = startT + (STATIONS.length - 1) * MINUTES_PER_STATION;
 
             if (currentTime >= startT && currentTime < endT) {
                 activeRoundIndex = i;
+                // ถ้ามีรอบวิ่งอยู่ รอบถัดไปคือ i + 1
+                if (i + 1 < roundTimesInMinutes.length) nextRoundIndex = i + 1;
                 state = "RUNNING";
                 break;
             } else if (currentTime < startT) {
@@ -407,7 +458,8 @@
         const etaText = document.getElementById('etaText');
         const golfCart = document.getElementById('golfCart');
         const userStationIdx = parseInt(document.getElementById('userStation').value);
-
+        
+        // Reset Styles
         document.querySelectorAll('.station-item').forEach(el => {
             el.classList.remove('active', 'passed', 'current', 'user-selected');
         });
@@ -415,17 +467,33 @@
         const selectedEl = document.getElementById(`station-${userStationIdx}`);
         if(selectedEl) selectedEl.classList.add('user-selected');
 
+        // ---- NEW: Logic แสดงรอบถัดไปเสมอ ----
+        const nextRoundContainer = document.getElementById('nextRoundContainer');
+        const nextRoundTimeEl = document.getElementById('nextRoundTime');
+        
+        if (nextIdx !== -1) {
+            nextRoundContainer.style.display = 'flex';
+            // คำนวณเวลาที่รอบถัดไปจะมาถึงสถานี User
+            const nextRoundStartMin = roundStarts[nextIdx];
+            const arrivalAtUser = nextRoundStartMin + (userStationIdx * MINUTES_PER_STATION);
+            
+            const h = Math.floor(arrivalAtUser / 60);
+            const m = arrivalAtUser % 60;
+            nextRoundTimeEl.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')} น.`;
+            
+            // ถ้าเป็นช่วงพักเบรค ให้ระบุว่า (หลังพักเบรค)
+            if (state === "BREAK") nextRoundTimeEl.innerText += " (หลังพัก)";
+        } else {
+             nextRoundContainer.style.display = 'none'; // หมดรอบแล้ว
+        }
+        // ------------------------------------
+
         if (state === "BREAK") {
             statusCard.className = "status-card break";
-            const nextRoundStart = 935;
-            const diff = nextRoundStart - currentTime;
             statusTitle.innerHTML = "⛔ <b>พักเบรครถ</b> (เริ่มรอบถัดไป 15:35)";
-            etaText.innerHTML = `อีก <span style="font-size:1.2em; color:#721c24;">${diff} นาที</span> รถจะออกจากต้นทาง`;
-            const arrivalAtUser = nextRoundStart + (userStationIdx * MINUTES_PER_STATION);
-            const diffUser = arrivalAtUser - currentTime;
-            if (diffUser > diff) etaText.innerHTML += `<br><span style="font-size:0.7em; color:#666;">(ถึงจุดที่คุณรอในอีก ${diffUser} นาที)</span>`;
+            etaText.innerHTML = "งดให้บริการ 14:35 - 15:35 น.";
             golfCart.style.display = "none";
-            updateStationTimes(nextRoundStart);
+            updateStationTimes(935); // Show next round times
             return;
         }
         
@@ -447,9 +515,11 @@
                 etaText.innerHTML = `อีก <span style="font-size:1.2em; color:#d63384;">${diff} นาที</span> รถจะออกจากต้นทาง`;
                 golfCart.style.display = "flex";
                 golfCart.style.top = "15px"; 
+                
                 const arrivalAtUser = nextTime + (userStationIdx * MINUTES_PER_STATION);
                 const diffUser = arrivalAtUser - currentTime;
                 if (diffUser > diff) etaText.innerHTML += `<br><span style="font-size:0.7em; color:#666;">(ถึงจุดที่คุณรอในอีก ${diffUser} นาที)</span>`;
+                
                 updateStationTimes(roundStarts[nextIdx]);
             }
             return;
@@ -478,15 +548,93 @@
             const minutesLeft = arrivalTime - currentTime;
 
             if (currentTime < arrivalTime) {
-                etaText.innerHTML = `อีก <span style="font-size:1.4em; color:#0056b3;">${minutesLeft} นาที</span><br>รถจะมาถึงคุณ`;
-            } else if (currentTime === arrivalTime) {
+                etaText.innerHTML = `อีก <span style="font-size:1.4em; color:#0056b3;">${Math.ceil(minutesLeft)} นาที</span><br>รถจะมาถึงคุณ`;
+            } else if (currentTime >= arrivalTime && currentTime < arrivalTime + 1) {
                 etaText.innerHTML = `<span style="color:#dc3545;">รถมาถึงสถานีคุณแล้ว!</span>`;
             } else {
-                etaText.innerHTML = `<span style="color:#6c757d;">รถผ่านสถานีคุณไปแล้ว</span><br><small>รอรอบถัดไปนะครับ</small>`;
+                etaText.innerHTML = `<span style="color:#6c757d;">รถผ่านสถานีคุณไปแล้ว</span>`;
             }
             updateStationTimes(startTime);
         }
     }
+
+    // ================= NEW: Schedule Modal Logic =================
+
+    function openSchedule() {
+        const modal = document.getElementById('scheduleModal');
+        const userStationIdx = parseInt(document.getElementById('userStation').value);
+        const modalStationName = document.getElementById('modalStationName');
+        const tbody = document.getElementById('scheduleTableBody');
+        
+        modalStationName.innerText = STATIONS[userStationIdx];
+        tbody.innerHTML = ''; // Clear old data
+
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+
+        const roundTimesInMinutes = ROUND_STARTS.map(t => {
+            const [h, m] = t.split(':').map(Number);
+            return h * 60 + m;
+        });
+
+        roundTimesInMinutes.forEach((startT, idx) => {
+            // คำนวณเวลาถึงสถานีนั้นๆ (Station Start Time)
+            const arrivalT = startT + (userStationIdx * MINUTES_PER_STATION);
+            
+            const h = Math.floor(arrivalT / 60);
+            const m = arrivalT % 60;
+            const timeStr = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+
+            const tr = document.createElement('tr');
+            
+            // เช็คสถานะ
+            // รอบที่ 10 (idx 9) คือ 14:05 -> ถึงปลายทาง 14:33
+            // พักเบรคคือ 14:35 - 15:35
+            // รอบถัดไปคือ 15:35 (idx 10)
+            
+            let status = "";
+            if (currentTime > arrivalT + 2) {
+                tr.className = "past";
+                status = "ผ่านไปแล้ว";
+            } else {
+                tr.className = "upcoming";
+                status = "🟢 ยังไม่มา";
+            }
+
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td>${timeStr}</td>
+                <td>${status}</td>
+            `;
+            tbody.appendChild(tr);
+
+            // แทรกแถวพักเบรคหลังรอบที่ 10
+            if (idx === 9) {
+                const breakRow = document.createElement('tr');
+                breakRow.className = "break";
+                breakRow.innerHTML = `
+                    <td colspan="3">⛔ พักเบรค 14:35 - 15:35 น.</td>
+                `;
+                tbody.appendChild(breakRow);
+            }
+        });
+
+        modal.style.display = "block";
+    }
+
+    function closeSchedule() {
+        document.getElementById('scheduleModal').style.display = "none";
+    }
+
+    // ปิด Modal เมื่อกดพื้นที่ว่าง
+    window.onclick = function(event) {
+        const modal = document.getElementById('scheduleModal');
+        if (event.target == modal) {
+            closeSchedule();
+        }
+    }
+
+    // ================= Helpers =================
 
     function updateStationTimes(startTimeInMinutes) {
         STATIONS.forEach((_, idx) => {
