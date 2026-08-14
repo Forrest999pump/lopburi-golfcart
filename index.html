@@ -1,658 +1,495 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ติดตามรถกอล์ฟไฟฟ้า (Lopburi Factory)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #007bff;
-            --secondary-color: #6c757d;
-            --bg-color: #f4f7f6;
-            --timeline-color: #ddd;
-            --station-text: #333;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --warning-bg: #fff3cd;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รถไฟฟ้ารับ-ส่งในโรงงาน ลพบุรี</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16232e;
+    --ink-2:#42566a;
+    --ink-3:#8296a6;
+    --paper:#eef1f3;
+    --surface:#ffffff;
+    --line:#dfe5ea;
+    --line-soft:#eceff2;
+    --live:#0d7f63;
+    --live-soft:#e6f2ee;
+    --hold:#9a6510;
+    --hold-soft:#fbf1de;
+    --focus:#1b4f7d;
+    --focus-soft:#eaf1f7;
+  }
+  *{box-sizing:border-box;}
 
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
+  body{
+    margin:0;padding:18px 14px 34px;
+    background:var(--paper);color:var(--ink);
+    font-family:'IBM Plex Sans Thai',system-ui,sans-serif;
+    font-size:15px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            position: relative;
-        }
+  .sheet{
+    max-width:560px;margin:0 auto;
+    background:var(--surface);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden;
+  }
 
-        h2 {
-            text-align: center;
-            margin: 0 0 15px 0;
-            color: var(--primary-color);
-        }
+  /* ---------- หัวเรื่อง ---------- */
+  .masthead{
+    background:var(--ink);color:#fff;padding:14px 18px;
+    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  }
+  .masthead h1{margin:0;font-size:16px;font-weight:600;}
+  .masthead .site{
+    display:block;font-size:11px;font-weight:400;letter-spacing:.14em;
+    text-transform:uppercase;color:#8fa6b6;margin-bottom:2px;
+  }
+  #clock{
+    font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:500;
+    letter-spacing:.04em;color:#d7e2ea;font-variant-numeric:tabular-nums;
+  }
 
-        /* นาฬิกาแบบ Realtime */
-        .realtime-clock {
-            text-align: center;
-            background: #2c3e50;
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .clock-time { font-size: 2em; font-weight: bold; letter-spacing: 2px; line-height: 1; }
-        .clock-date { font-size: 0.9em; opacity: 0.8; margin-top: 5px; }
+  /* ---------- แถบสถานะ ---------- */
+  .status{
+    padding:15px 18px;border-bottom:1px solid var(--line);
+    border-left:4px solid var(--live);background:var(--live-soft);
+  }
+  .status[data-state="waiting"]{border-left-color:var(--focus);background:var(--focus-soft);}
+  .status[data-state="hold"],.status[data-state="closed"]{border-left-color:var(--hold);background:var(--hold-soft);}
 
-        /* ส่วนเลือกสถานี */
-        .control-panel {
-            background: #e9ecef;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 1.1em; }
+  .status-line{
+    display:flex;align-items:center;gap:8px;
+    font-size:12.5px;font-weight:600;color:var(--ink-2);letter-spacing:.02em;
+  }
+  .beacon{
+    width:9px;height:9px;border-radius:50%;background:var(--live);flex:none;
+    animation:beat 2.4s infinite;
+  }
+  .status[data-state="waiting"] .beacon{background:var(--focus);animation:none;}
+  .status[data-state="hold"] .beacon,.status[data-state="closed"] .beacon{background:var(--hold);animation:none;}
+  @keyframes beat{
+    0%{box-shadow:0 0 0 0 rgba(13,127,99,.45);}
+    70%{box-shadow:0 0 0 9px rgba(13,127,99,0);}
+    100%{box-shadow:0 0 0 0 rgba(13,127,99,0);}
+  }
 
-        select {
-            padding: 12px;
-            font-size: 18px;
-            border-radius: 8px;
-            border: 2px solid #ccc;
-            width: 100%;
-            background: white;
-            margin-bottom: 15px;
-            cursor: pointer;
-        }
+  .headline{margin-top:7px;font-size:21px;font-weight:600;line-height:1.3;}
+  .headline .num{font-family:'IBM Plex Mono',monospace;font-size:30px;letter-spacing:-.01em;}
+  .sub{margin-top:5px;font-size:13px;color:var(--ink-2);}
+  .sub b{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--ink);}
 
-        /* กลุ่มปุ่มกด */
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            flex-direction: column;
-        }
+  /* ---------- หัวตาราง ---------- */
+  .board-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:14px 18px 6px;font-size:11px;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
+  .hint{margin:0;padding:0 18px 8px;font-size:12px;color:var(--ink-3);}
 
-        .check-btn, .schedule-btn {
-            border: none;
-            padding: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 30px;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
+  /* ---------- เส้นทาง ---------- */
+  .track{position:relative;padding:2px 16px 12px;}
+  .spine{position:absolute;left:30px;top:16px;bottom:26px;width:2px;background:var(--line);}
 
-        .check-btn {
-            background-color: var(--primary-color);
-            color: white;
-            box-shadow: 0 4px 6px rgba(0,123,255,0.3);
-            font-size: 18px;
-        }
-        .check-btn:active { transform: scale(0.98); }
+  .stop{position:relative;border-bottom:1px solid var(--line-soft);}
+  .stop:last-child{border-bottom:0;}
 
-        .schedule-btn {
-            background-color: white;
-            color: var(--primary-color);
-            border: 2px solid var(--primary-color);
-        }
-        .schedule-btn:hover { background-color: #f0f8ff; }
+  .stop-head{
+    width:100%;display:flex;align-items:center;gap:10px;
+    padding:11px 4px 11px 36px;
+    background:none;border:0;text-align:left;cursor:pointer;
+    font-family:inherit;color:inherit;
+  }
+  .stop-head:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:6px;}
 
-        /* ผลลัพธ์ */
-        .result-panel {
-            display: none;
-            animation: fadeIn 0.5s;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+  .node{
+    position:absolute;left:10px;top:23px;
+    width:10px;height:10px;border-radius:50%;
+    background:var(--surface);border:2px solid var(--line);
+  }
+  .stop.passed .node{background:var(--line);}
+  .stop.passed .name{color:var(--ink-3);}
+  .stop.at-now .node{border-color:var(--live);background:var(--live);}
+  .stop.at-now .name{color:var(--live);font-weight:600;}
 
-        .status-card {
-            background: #d1ecf1;
-            color: #0c5460;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            text-align: center;
-            border: 1px solid #bee5eb;
-        }
-        .status-card.waiting { background: #fff3cd; color: #856404; border-color: #ffeeba; }
-        .status-card.break { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+  .name{flex:1;font-size:14.5px;min-width:0;}
+  .when{text-align:right;flex:none;}
+  .when .t{
+    display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;
+    color:var(--ink);font-variant-numeric:tabular-nums;
+  }
+  .when .in{display:block;font-size:11px;color:var(--ink-3);margin-top:1px;}
+  .when .in.soon{color:var(--live);font-weight:600;}
+  .stop.passed .when .t{color:var(--ink-3);}
 
-        .eta-display {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(255,255,255,0.5);
-            border-radius: 8px;
-        }
+  .chev{flex:none;width:14px;height:14px;color:var(--ink-3);transition:transform .2s ease;}
+  .stop.open .chev{transform:rotate(180deg);}
 
-        /* ข้อมูลรอบถัดไป (Next Round Info) */
-        .next-round-info {
-            background: #f8f9fa;
-            border-left: 5px solid var(--secondary-color);
-            padding: 10px 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            color: #555;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .next-round-info strong { color: var(--primary-color); font-size: 1.1em; }
+  /* ---------- แผงเวลาทั้งวัน ---------- */
+  .stop-body{display:none;padding:2px 4px 14px 36px;}
+  .stop.open .stop-body{display:block;animation:slide .18s ease-out;}
+  @keyframes slide{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
 
-        /* Timeline */
-        .list-header {
-            display: flex;
-            padding-left: 55px; 
-            margin-bottom: 5px;
-            padding-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-            font-size: 0.95em;
-            border-bottom: 2px solid #eee;
-        }
-        .col-name { flex-grow: 1; }
-        .col-time { min-width: 45px; text-align: center; }
+  .body-note{margin:0 0 8px;font-size:11.5px;color:var(--ink-3);}
+  .rounds{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px;}
+  .r{
+    border:1px solid var(--line);border-radius:7px;padding:5px 6px 6px;
+    background:var(--surface);text-align:center;
+  }
+  .r .no{display:block;font-size:10px;color:var(--ink-3);letter-spacing:.04em;}
+  .r .tm{
+    display:block;font-family:'IBM Plex Mono',monospace;font-size:14.5px;
+    font-weight:500;font-variant-numeric:tabular-nums;
+  }
+  .r.past{background:#f5f7f8;border-color:var(--line-soft);}
+  .r.past .tm{color:var(--ink-3);}
+  .r.next{background:var(--live);border-color:var(--live);}
+  .r.next .no{color:rgba(255,255,255,.75);}
+  .r.next .tm{color:#fff;font-weight:600;}
+  .r-break{
+    grid-column:1/-1;display:flex;align-items:center;gap:6px;
+    font-size:11.5px;color:var(--hold);background:var(--hold-soft);
+    border-radius:7px;padding:5px 9px;
+  }
+  .r-break span{font-family:'IBM Plex Mono',monospace;}
 
-        .timeline-container { position: relative; padding-left: 30px; margin-top: 10px; }
-        .timeline-line {
-            position: absolute; left: 15px; top: 15px; bottom: 15px;
-            width: 4px; background: var(--timeline-color); border-radius: 2px; z-index: 0;
-        }
-        .station-item {
-            position: relative; padding: 12px 0 12px 25px;
-            display: flex; align-items: center; z-index: 1;
-            border-bottom: 1px dashed #eee;
-        }
-        .dot {
-            position: absolute; left: -22px; width: 12px; height: 12px;
-            background: white; border: 3px solid var(--timeline-color); border-radius: 50%;
-            transition: all 0.3s;
-        }
-        .station-item.passed .dot { background: var(--timeline-color); border-color: var(--timeline-color); }
-        
-        .station-name { font-size: 15px; color: var(--station-text); flex-grow: 1; }
-        .station-time { font-size: 13px; color: #666; background: #f0f0f0; padding: 2px 8px; border-radius: 10px; min-width: 45px; text-align: center; }
+  /* ---------- รถกอล์ฟ ---------- */
+  #cart{
+    position:absolute;left:14px;width:34px;height:34px;
+    display:none;z-index:4;transition:top .9s linear;
+    filter:drop-shadow(0 2px 3px rgba(22,35,46,.28));
+  }
+  #cart svg{display:block;width:34px;height:34px;}
+  .cart-body{fill:var(--live);}
+  .cart-outline{fill:none;stroke:var(--surface);stroke-width:3.4;stroke-linejoin:round;}
+  .cart-hub{fill:var(--surface);}
+  #cart.parked .cart-body{fill:var(--ink-3);}
 
-        .station-item.user-selected {
-            background-color: rgba(0, 123, 255, 0.1);
-            border-radius: 5px;
-            border-bottom: 1px solid rgba(0, 123, 255, 0.2);
-        }
-        .station-item.user-selected .station-name { font-weight: bold; color: var(--primary-color); }
+  /* ---------- หมายเหตุ ---------- */
+  .notes{
+    padding:12px 18px 16px;border-top:1px solid var(--line);background:#f7f9fa;
+    font-size:12px;line-height:1.6;color:var(--ink-2);
+  }
+  .notes p{margin:0 0 4px;}
+  .notes p:last-child{margin-bottom:0;}
+  .notes span{font-family:'IBM Plex Mono',monospace;}
 
-        .golf-cart-marker {
-            position: absolute; left: 3px; width: 22px; height: 22px;
-            background: var(--success-color); border: 3px solid white; border-radius: 50%;
-            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3), 0 3px 6px rgba(0,0,0,0.2);
-            z-index: 10; transition: top 1s linear;
-        }
-        .golf-cart-marker::after {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            border-radius: 50%; background: rgba(40, 167, 69, 0.4); opacity: 0;
-            animation: pulse 2s infinite; z-index: -1; transform-origin: center;
-        }
-        @keyframes pulse { 0% { transform: scale(0.5); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
-        
-        .footer-note { margin-top: 30px; font-size: 12px; color: #999; text-align: center; }
-
-        /* ================= MODAL ตารางเวลา ================= */
-        .modal {
-            display: none; 
-            position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; 
-            background-color: rgba(0,0,0,0.5); 
-            animation: fadeIn 0.3s;
-        }
-        .modal-content {
-            background-color: #fefefe; margin: 10% auto; padding: 0; border-radius: 15px;
-            width: 90%; max-width: 500px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            position: relative;
-            max-height: 80vh; display: flex; flex-direction: column;
-        }
-        .modal-header {
-            padding: 15px 20px; background: var(--primary-color); color: white;
-            border-radius: 15px 15px 0 0; display: flex; justify-content: space-between; align-items: center;
-        }
-        .modal-header h3 { margin: 0; font-size: 1.2em; }
-        .close-btn { color: white; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; }
-        
-        .modal-body { padding: 15px; overflow-y: auto; }
-        
-        .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .schedule-table th, .schedule-table td {
-            padding: 10px; text-align: center; border-bottom: 1px solid #ddd;
-        }
-        .schedule-table th { background: #f8f9fa; color: #555; position: sticky; top: 0; }
-        .schedule-table tr.past { color: #aaa; background: #fafafa; }
-        .schedule-table tr.upcoming { color: #333; font-weight: bold; background: #e8f4ff; }
-        .schedule-table tr.break { background: #ffeeba; color: #856404; }
-
-    </style>
+  @media (prefers-reduced-motion:reduce){
+    #cart{transition:none;}
+    .beacon{animation:none;}
+    .stop.open .stop-body{animation:none;}
+  }
+  @media (max-width:400px){
+    body{padding:10px 8px 24px;}
+    .headline{font-size:19px;}
+  }
+</style>
 </head>
 <body>
 
-<div class="container">
-    <h2>🚌 รถไฟฟ้าโรงงานลพบุรี</h2>
-    
-    <div class="realtime-clock">
-        <div class="clock-time" id="clockTime">00:00:00</div>
-        <div class="clock-date" id="clockDate">-</div>
-    </div>
-    
-    <div class="control-panel">
-        <label for="userStation">📍 คุณรออยู่ที่สถานีไหน?</label>
-        <select id="userStation">
-            <!-- JS จะสร้างตัวเลือก -->
-        </select>
-        
-        <div class="btn-group">
-            <button class="check-btn" onclick="activateTracker()">
-                <span>🔍 ตรวจสอบรอบรถปัจจุบัน</span>
-            </button>
-            <button class="schedule-btn" onclick="openSchedule()">
-                <span>📅 ดูตารางเดินรถทั้งหมด</span>
-            </button>
-        </div>
+<main class="sheet">
+  <header class="masthead">
+    <h1><span class="site">NMB-Minebea · Lopburi</span>รถไฟฟ้ารับ-ส่งในโรงงาน</h1>
+    <div id="clock">--:--:--</div>
+  </header>
+
+  <section class="status" id="status" data-state="waiting">
+    <div class="status-line"><span class="beacon"></span><span id="statusText">กำลังอ่านเวลา</span></div>
+    <div class="headline" id="headline">—</div>
+    <div class="sub" id="sub"></div>
+  </section>
+
+  <div class="board-head">
+    <span>จุดรับ-ส่ง</span>
+    <span>รถถึงครั้งถัดไป</span>
+  </div>
+  <p class="hint">แตะจุดรับ-ส่งเพื่อดูเวลารถเข้าทั้ง 12 รอบของวัน</p>
+
+  <div class="track" id="track">
+    <div class="spine"></div>
+
+    <div id="cart" aria-hidden="true">
+      <svg viewBox="0 0 44 32" xmlns="http://www.w3.org/2000/svg">
+        <g class="cart-outline">
+          <path d="M7 4.5h29M9.8 6v9M32.3 6v10M18.7 10.5v6"/>
+          <path d="M6 21h33v-4.4H33.4l-1.6-2.6h-9.7v2.6H6z"/>
+          <circle cx="13" cy="25.5" r="4.2"/>
+          <circle cx="31" cy="25.5" r="4.2"/>
+        </g>
+        <g class="cart-body">
+          <rect x="6.6" y="3" width="29.8" height="3" rx="1.5"/>
+          <rect x="8.5" y="5.6" width="2.6" height="9.4" rx="1"/>
+          <rect x="31" y="5.6" width="2.6" height="10.4" rx="1"/>
+          <rect x="17.4" y="9.4" width="2.6" height="7.2" rx="1"/>
+          <path d="M6 16.6h16.1V14h9.7c.6 0 1.1.3 1.4.8l1.5 2.4H39V21H6z"/>
+          <circle cx="13" cy="25.5" r="4.2"/>
+          <circle cx="31" cy="25.5" r="4.2"/>
+        </g>
+        <circle class="cart-hub" cx="13" cy="25.5" r="1.5"/>
+        <circle class="cart-hub" cx="31" cy="25.5" r="1.5"/>
+      </svg>
     </div>
 
-    <div id="resultPanel" class="result-panel">
-        <div id="statusCard" class="status-card">
-            <div id="statusTitle">กำลังโหลดข้อมูล...</div>
-            <div id="etaText" class="eta-display">--</div>
-        </div>
+    <div id="stops"></div>
+  </div>
 
-        <!-- กล่องบอกรอบถัดไป -->
-        <div id="nextRoundContainer" class="next-round-info" style="display:none;">
-            <span>⏭ รอบถัดไปจะมาถึงนี่:</span>
-            <strong id="nextRoundTime">--:--</strong>
-        </div>
-        
-        <div class="list-header">
-            <div class="col-name">ชื่อสถานี</div>
-            <div class="col-time">เวลา</div>
-        </div>
-
-        <div class="timeline-container" id="timelineContainer">
-            <div class="timeline-line"></div>
-            <div id="golfCart" class="golf-cart-marker" style="display: none;"></div>
-            <div id="stationsList"></div>
-        </div>
-    </div>
-    
-    <div class="footer-note">
-        *เวลาอาจคลาดเคลื่อนตามสภาพการจราจร<br>
-        พักเบรครถช่วง 14:35 - 15:35 น.
-    </div>
-</div>
-
-<!-- Modal ตารางเดินรถ -->
-<div id="scheduleModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modalTitle">ตารางเดินรถ</h3>
-            <span class="close-btn" onclick="closeSchedule()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <div style="font-size: 0.9em; color: #666; margin-bottom: 10px; text-align: center;">
-                เวลาที่รถจะมาถึงสถานี: <strong id="modalStationName" style="color: var(--primary-color);">--</strong>
-            </div>
-            <table class="schedule-table">
-                <thead>
-                    <tr>
-                        <th>รอบที่</th>
-                        <th>เวลามาถึง</th>
-                        <th>สถานะ</th>
-                    </tr>
-                </thead>
-                <tbody id="scheduleTableBody">
-                    <!-- JS generated rows -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+  <footer class="notes">
+    <p>1. รถไฟฟ้าไม่เข้าจอดที่หน้าป้อม รปภ. อาคาร 7 และจุดทางขึ้น New Warehouse เพื่อหลีกเลี่ยงอุบัติเหตุจากรถขนส่งวัตถุดิบ</p>
+    <p>2. หยุดให้บริการ <span>14:35 – 15:35</span> น. ตามประกาศบริษัท ช่วงรถบัสรับ-ส่งพนักงานเข้า-ออกกะ</p>
+    <p>เวลาที่แสดงอ้างอิงตารางเดินรถ อาจคลาดเคลื่อนตามสภาพการจราจรภายในโรงงาน</p>
+  </footer>
+</main>
 
 <script>
-    // ==========================================
-    // 1. Config
-    // ==========================================
-    const STATIONS = [
-        "👮 ป้อม-1", "ℹ️ Infor-1", "👮 ป้อม-2/1", "ℹ️ Infor-3", "👮 ป้อม-3", 
-        "🏭 Press / New Warehouse", "👔 OE", "⚙️ IM", "🏗️ Phase 8", "🏢 6/1", 
-        "🏢 6/2", "🏗️ Phase 5", "🔩 Rod End", "🚒 ดับเพลิง / ห้องสัมมนา / Automate", "🏁 โรงรถ"
-    ];
+/* ============================================================
+   ตารางรถไฟฟ้ารับ-ส่งในโรงงานลพบุรี
+   offset = นาทีนับจากเวลาที่รถออกรอบนั้นที่ป้อม-1
+   ============================================================ */
+const STOPS = [
+  { name:'ป้อม-1',                               offset:0  },
+  { name:'Infor-1',                              offset:2  },
+  { name:'ป้อม-2/1',                             offset:4  },
+  { name:'Infor-3',                              offset:6  },
+  { name:'ป้อม-3',                               offset:8  },
+  { name:'Press / New Warehouse',                offset:11 },
+  { name:'OE',                                   offset:13 },
+  { name:'IM',                                   offset:15 },
+  { name:'Phase 11',                             offset:18 },
+  { name:'Phase 8',                              offset:20 },
+  { name:'6/1',                                  offset:22 },
+  { name:'6/2',                                  offset:24 },
+  { name:'Phase 5',                              offset:26 },
+  { name:'Rod End',                              offset:28 },
+  { name:'ดับเพลิง / ห้องสัมมนาใหม่ / Automate', offset:30 },
+  { name:'โรงรถ (สิ้นสุดรอบ)',                   offset:32 }
+];
 
-    const ROUND_STARTS = [
-        "08:04", "08:45", "09:25", "10:05", "10:45", "11:25", 
-        "12:05", "12:45", "13:25", "14:05", "15:35", "16:15"
-    ];
+const ROUNDS = ['08:04','08:45','09:25','10:05','10:45','11:25',
+                '12:05','12:45','13:25','14:05','15:35','16:15'];
 
-    const MINUTES_PER_STATION = 2;
-    let isTrackingActive = false;
+const DWELL       = 1;      // จอดรับ-ส่งจุดละ 1 นาที
+const LAST        = STOPS[STOPS.length-1].offset;
+const HOLD_START  = 14*60 + 35;
+const HOLD_END    = 15*60 + 35;
+const BREAK_AFTER = 9;      // หยุดพักหลังรอบที่ 10
 
-    // ==========================================
-    // 2. Logic
-    // ==========================================
+const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+const hhmm  = v => String(Math.floor(v/60)%24).padStart(2,'0')+':'+String(Math.round(v)%60).padStart(2,'0');
+const STARTS = ROUNDS.map(toMin);
 
-    function init() {
-        renderStations();
-        updateClock();
-        setInterval(updateClock, 1000);
-        setInterval(updateSystem, 1000);
+const el = {
+  clock:    document.getElementById('clock'),
+  status:   document.getElementById('status'),
+  text:     document.getElementById('statusText'),
+  headline: document.getElementById('headline'),
+  sub:      document.getElementById('sub'),
+  list:     document.getElementById('stops'),
+  cart:     document.getElementById('cart')
+};
 
-        // Smart QR Logic
-        const urlParams = new URLSearchParams(window.location.search);
-        const stationParam = urlParams.get('s');
-        if (stationParam !== null) {
-            const stationIndex = parseInt(stationParam);
-            if (!isNaN(stationIndex) && stationIndex >= 0 && stationIndex < STATIONS.length) {
-                document.getElementById('userStation').value = stationIndex;
-                activateTracker();
-            }
-        }
+let openIndex = -1;
+
+/* ---------- สร้างรายการจุดรับ-ส่ง ---------- */
+function build(){
+  STOPS.forEach((s,i)=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'stop';
+    wrap.id = 'stop-'+i;
+    wrap.innerHTML =
+      '<span class="node"></span>' +
+      '<button class="stop-head" type="button" aria-expanded="false" aria-controls="body-'+i+'">' +
+        '<span class="name">'+s.name+'</span>' +
+        '<span class="when"><span class="t" id="t-'+i+'">--:--</span><span class="in" id="in-'+i+'"></span></span>' +
+        '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>' +
+      '</button>' +
+      '<div class="stop-body" id="body-'+i+'">' +
+        '<p class="body-note">เวลารถถึงจุดนี้ · จอดรับ-ส่งจุดละ 1 นาที</p>' +
+        '<div class="rounds" id="rounds-'+i+'"></div>' +
+      '</div>';
+    wrap.querySelector('.stop-head').addEventListener('click', ()=>toggle(i));
+    el.list.appendChild(wrap);
+    fillRounds(i);
+  });
+
+  // QR ของแต่ละป้ายเปิดจุดนั้นให้เลย เช่น ?s=8
+  const q = parseInt(new URLSearchParams(location.search).get('s'),10);
+  if (!isNaN(q) && q>=0 && q<STOPS.length){
+    toggle(q);
+    setTimeout(()=>document.getElementById('stop-'+q).scrollIntoView({behavior:'smooth',block:'center'}),300);
+  }
+}
+
+function toggle(i){
+  if (openIndex === i){ setOpen(i,false); openIndex = -1; return; }
+  if (openIndex > -1) setOpen(openIndex,false);
+  setOpen(i,true);
+  openIndex = i;
+}
+function setOpen(i,on){
+  const wrap = document.getElementById('stop-'+i);
+  wrap.classList.toggle('open',on);
+  wrap.querySelector('.stop-head').setAttribute('aria-expanded',on);
+}
+
+function fillRounds(i){
+  const grid = document.getElementById('rounds-'+i);
+  STARTS.forEach((start,r)=>{
+    const c = document.createElement('div');
+    c.className = 'r';
+    c.id = 'r-'+i+'-'+r;
+    c.innerHTML = '<span class="no">รอบ '+(r+1)+'</span><span class="tm">'+hhmm(start+STOPS[i].offset)+'</span>';
+    grid.appendChild(c);
+    if (r === BREAK_AFTER){
+      const b = document.createElement('div');
+      b.className = 'r-break';
+      b.innerHTML = 'งดเดินรถ <span>14:35 – 15:35</span> น. · ช่วงรถบัสรับ-ส่งกะ';
+      grid.appendChild(b);
+    }
+  });
+}
+
+/* ---------- อัปเดตทุกวินาที ---------- */
+function tick(){
+  const now = new Date();
+  const t   = now.getHours()*60 + now.getMinutes() + now.getSeconds()/60;
+  el.clock.textContent = now.toLocaleTimeString('th-TH',{hour12:false});
+
+  const running = STARTS.findIndex(s => t >= s && t < s + LAST + DWELL);
+  const next    = STARTS.findIndex(s => s > t);
+
+  paintStops(t, running);
+  paintRounds(t);
+
+  if (running > -1)                    return statusRunning(running, t);
+  if (t >= HOLD_START && t < HOLD_END) return statusHold();
+  if (next > -1)                       return statusWaiting(next, t);
+  statusClosed();
+}
+
+function paintStops(t, running){
+  STOPS.forEach((s,i)=>{
+    const wrap  = document.getElementById('stop-'+i);
+    const tEl   = document.getElementById('t-'+i);
+    const inEl  = document.getElementById('in-'+i);
+    const next  = STARTS.map(x=>x+s.offset).find(a => t < a + DWELL);
+
+    wrap.classList.remove('passed','at-now');
+
+    if (next === undefined){
+      tEl.textContent  = '—';
+      inEl.textContent = 'หมดรอบวันนี้';
+      inEl.className   = 'in';
+      wrap.classList.add('passed');
+    } else {
+      const left = next - t;
+      tEl.textContent = hhmm(next);
+      if (left <= 0){ inEl.textContent = 'รถอยู่ที่จุดนี้'; inEl.className = 'in soon'; }
+      else if (left <= 30){ inEl.textContent = 'อีก '+Math.ceil(left)+' นาที'; inEl.className = left <= 10 ? 'in soon' : 'in'; }
+      else { inEl.textContent = ''; inEl.className = 'in'; }
     }
 
-    function activateTracker() {
-        isTrackingActive = true;
-        document.getElementById('resultPanel').style.display = 'block';
-        updateSystem();
-        document.getElementById('resultPanel').scrollIntoView({ behavior: 'smooth' });
+    if (running > -1){
+      const elapsed = t - STARTS[running];
+      if (elapsed >= s.offset + DWELL) wrap.classList.add('passed');
+      if (elapsed >= s.offset && elapsed < s.offset + DWELL) wrap.classList.add('at-now');
     }
+  });
 
-    function updateClock() {
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('th-TH', { hour12: false });
-        const dateStr = now.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-        document.getElementById('clockTime').innerText = timeStr;
-        document.getElementById('clockDate').innerText = dateStr;
-    }
+  moveCart(t, running);
+}
 
-    function renderStations() {
-        const list = document.getElementById('stationsList');
-        const select = document.getElementById('userStation');
-        
-        STATIONS.forEach((name, index) => {
-            const item = document.createElement('div');
-            item.className = 'station-item';
-            item.id = `station-${index}`;
-            item.innerHTML = `
-                <div class="dot"></div>
-                <div class="station-name">${name}</div>
-                <div class="station-time" id="time-${index}">--:--</div>
-            `;
-            list.appendChild(item);
+function paintRounds(t){
+  STOPS.forEach((s,i)=>{
+    let marked = false;
+    STARTS.forEach((start,r)=>{
+      const c = document.getElementById('r-'+i+'-'+r);
+      const a = start + s.offset;
+      c.classList.remove('past','next');
+      if (t >= a + DWELL) c.classList.add('past');
+      else if (!marked){ c.classList.add('next'); marked = true; }
+    });
+  });
+}
 
-            const option = document.createElement('option');
-            option.value = index;
-            option.text = name;
-            select.appendChild(option);
-        });
-        select.value = 0;
-    }
+function headCenter(i){
+  const wrap = document.getElementById('stop-'+i);
+  return wrap.offsetTop + wrap.querySelector('.stop-head').offsetHeight/2;
+}
 
-    function updateSystem() {
-        const now = new Date();
-        const currentTime = now.getHours() * 60 + now.getMinutes();
-        const currentSeconds = now.getSeconds();
+function moveCart(t, running){
+  if (running === -1){
+    const hasNext = STARTS.some(s => s > t);
+    if (!hasNext || (t >= HOLD_START && t < HOLD_END)){ el.cart.style.display = 'none'; return; }
+    el.cart.style.display = 'block';
+    el.cart.classList.add('parked');
+    el.cart.style.top = (headCenter(0) - 17) + 'px';
+    return;
+  }
 
-        const roundTimesInMinutes = ROUND_STARTS.map(t => {
-            const [h, m] = t.split(':').map(Number);
-            return h * 60 + m;
-        });
+  const elapsed = t - STARTS[running];
+  let pos = headCenter(STOPS.length-1);
+  for (let i=0;i<STOPS.length-1;i++){
+    const dep = STOPS[i].offset + DWELL, arr = STOPS[i+1].offset;
+    if (elapsed <= dep){ pos = headCenter(i); break; }
+    if (elapsed <  arr){ pos = headCenter(i) + (elapsed-dep)/(arr-dep)*(headCenter(i+1)-headCenter(i)); break; }
+  }
+  el.cart.style.display = 'block';
+  el.cart.classList.remove('parked');
+  el.cart.style.top = (pos - 17) + 'px';
+}
 
-        let activeRoundIndex = -1;
-        let nextRoundIndex = -1;
-        let state = "WAITING"; 
+/* ---------- แถบสถานะด้านบน ---------- */
+function statusRunning(idx, t){
+  const start = STARTS[idx], elapsed = t - start;
+  el.status.dataset.state = 'running';
+  el.text.textContent = 'รถกำลังวิ่ง · รอบ '+(idx+1)+' ออก '+ROUNDS[idx]+' น.';
 
-        // หา Active และ Next Round
-        for (let i = 0; i < roundTimesInMinutes.length; i++) {
-            const startT = roundTimesInMinutes[i];
-            const endT = startT + (STATIONS.length - 1) * MINUTES_PER_STATION;
+  let here = 0;
+  STOPS.forEach((s,i)=>{ if (elapsed >= s.offset) here = i; });
 
-            if (currentTime >= startT && currentTime < endT) {
-                activeRoundIndex = i;
-                // ถ้ามีรอบวิ่งอยู่ รอบถัดไปคือ i + 1
-                if (i + 1 < roundTimesInMinutes.length) nextRoundIndex = i + 1;
-                state = "RUNNING";
-                break;
-            } else if (currentTime < startT) {
-                nextRoundIndex = i;
-                state = "WAITING";
-                break;
-            }
-        }
+  if (elapsed < STOPS[here].offset + DWELL){
+    el.headline.textContent = 'จอดอยู่ที่ ' + STOPS[here].name;
+  } else if (here < STOPS.length-1){
+    el.headline.innerHTML = 'กำลังไป ' + STOPS[here+1].name +
+      ' · <span class="num">'+hhmm(start+STOPS[here+1].offset)+'</span>';
+  } else {
+    el.headline.textContent = 'ถึงโรงรถแล้ว · จบรอบ';
+  }
 
-        if (currentTime >= 875 && currentTime < 935) state = "BREAK";
-        
-        const lastRoundEnd = roundTimesInMinutes[roundTimesInMinutes.length-1] + (STATIONS.length - 1) * MINUTES_PER_STATION;
-        if (currentTime >= lastRoundEnd) state = "END";
+  const rest = STOPS.filter(s => elapsed < s.offset).length;
+  el.sub.innerHTML = rest
+    ? 'เหลืออีก '+rest+' จุดในรอบนี้ · ถึงโรงรถ <b>'+hhmm(start+LAST)+'</b>'
+    : 'ทำความสะอาดเบาะที่นั่งก่อนออกรอบถัดไป';
+}
 
-        if (isTrackingActive) {
-            updateUI(state, activeRoundIndex, nextRoundIndex, currentTime, currentSeconds, roundTimesInMinutes);
-        }
-    }
+function statusWaiting(next, t){
+  el.status.dataset.state = 'waiting';
+  el.text.textContent = 'รถจอดรอที่ต้นทาง ป้อม-1';
+  el.headline.innerHTML = 'ออกรอบ '+(next+1)+' เวลา <span class="num">'+ROUNDS[next]+'</span>';
+  el.sub.innerHTML = 'อีก <b>'+Math.max(1,Math.ceil(STARTS[next]-t))+'</b> นาที · แตะจุดของคุณเพื่อดูเวลารถเข้า';
+}
 
-    function updateUI(state, activeIdx, nextIdx, currentTime, currentSeconds, roundStarts) {
-        const statusCard = document.getElementById('statusCard');
-        const statusTitle = document.getElementById('statusTitle');
-        const etaText = document.getElementById('etaText');
-        const golfCart = document.getElementById('golfCart');
-        const userStationIdx = parseInt(document.getElementById('userStation').value);
-        
-        // Reset Styles
-        document.querySelectorAll('.station-item').forEach(el => {
-            el.classList.remove('active', 'passed', 'current', 'user-selected');
-        });
-        
-        const selectedEl = document.getElementById(`station-${userStationIdx}`);
-        if(selectedEl) selectedEl.classList.add('user-selected');
+function statusHold(){
+  el.status.dataset.state = 'hold';
+  el.text.textContent = 'งดเดินรถชั่วคราว';
+  el.headline.innerHTML = 'เริ่มวิ่งอีกครั้ง <span class="num">15:35</span>';
+  el.sub.innerHTML = 'ช่วง <b>14:35 – 15:35</b> เป็นเวลาห้ามรถวิ่งในโรงงาน (รถบัสรับ-ส่งกะ)';
+}
 
-        // ---- NEW: Logic แสดงรอบถัดไปเสมอ ----
-        const nextRoundContainer = document.getElementById('nextRoundContainer');
-        const nextRoundTimeEl = document.getElementById('nextRoundTime');
-        
-        if (nextIdx !== -1) {
-            nextRoundContainer.style.display = 'flex';
-            // คำนวณเวลาที่รอบถัดไปจะมาถึงสถานี User
-            const nextRoundStartMin = roundStarts[nextIdx];
-            const arrivalAtUser = nextRoundStartMin + (userStationIdx * MINUTES_PER_STATION);
-            
-            const h = Math.floor(arrivalAtUser / 60);
-            const m = arrivalAtUser % 60;
-            nextRoundTimeEl.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')} น.`;
-            
-            // ถ้าเป็นช่วงพักเบรค ให้ระบุว่า (หลังพักเบรค)
-            if (state === "BREAK") nextRoundTimeEl.innerText += " (หลังพัก)";
-        } else {
-             nextRoundContainer.style.display = 'none'; // หมดรอบแล้ว
-        }
-        // ------------------------------------
+function statusClosed(){
+  el.status.dataset.state = 'closed';
+  el.text.textContent = 'สิ้นสุดการเดินรถของวันนี้';
+  el.headline.innerHTML = 'รอบแรกพรุ่งนี้ <span class="num">08:04</span>';
+  el.sub.textContent = 'วันทำงานเดินรถ 12 รอบ ตั้งแต่ 08:04 ถึง 16:47 น.';
+}
 
-        if (state === "BREAK") {
-            statusCard.className = "status-card break";
-            statusTitle.innerHTML = "⛔ <b>พักเบรครถ</b> (เริ่มรอบถัดไป 15:35)";
-            etaText.innerHTML = "งดให้บริการ 14:35 - 15:35 น.";
-            golfCart.style.display = "none";
-            updateStationTimes(935); // Show next round times
-            return;
-        }
-        
-        if (state === "END") {
-            statusCard.className = "status-card waiting";
-            statusTitle.innerText = "😴 จบการเดินรถวันนี้";
-            etaText.innerText = "พบกันใหม่พรุ่งนี้ 08:04 น.";
-            golfCart.style.display = "none";
-            clearStationTimes();
-            return;
-        }
-
-        if (state === "WAITING") {
-            statusCard.className = "status-card waiting";
-            if (nextIdx !== -1) {
-                const nextTime = roundStarts[nextIdx];
-                const diff = nextTime - currentTime;
-                statusTitle.innerText = `⏳ รถจอดรออยู่ที่ ${STATIONS[0]}`;
-                etaText.innerHTML = `อีก <span style="font-size:1.2em; color:#d63384;">${diff} นาที</span> รถจะออกจากต้นทาง`;
-                golfCart.style.display = "flex";
-                golfCart.style.top = "15px"; 
-                
-                const arrivalAtUser = nextTime + (userStationIdx * MINUTES_PER_STATION);
-                const diffUser = arrivalAtUser - currentTime;
-                if (diffUser > diff) etaText.innerHTML += `<br><span style="font-size:0.7em; color:#666;">(ถึงจุดที่คุณรอในอีก ${diffUser} นาที)</span>`;
-                
-                updateStationTimes(roundStarts[nextIdx]);
-            }
-            return;
-        }
-
-        if (state === "RUNNING") {
-            statusCard.className = "status-card";
-            const startTime = roundStarts[activeIdx];
-            const elapsedMinutes = (currentTime - startTime) + (currentSeconds / 60);
-            let carPos = elapsedMinutes / MINUTES_PER_STATION;
-            if (carPos >= STATIONS.length - 1) carPos = STATIONS.length - 1;
-
-            const stationHeight = document.querySelector('.station-item').offsetHeight || 57;
-            const topPos = 15 + (carPos * stationHeight); 
-            golfCart.style.display = "block"; 
-            golfCart.style.top = `${topPos}px`;
-
-            const currentStationInt = Math.floor(carPos);
-            for(let i=0; i < currentStationInt; i++) {
-                document.getElementById(`station-${i}`).classList.add('passed');
-            }
-
-            statusTitle.innerHTML = `🟢 <b>รถกำลังวิ่ง</b> (รอบ ${ROUND_STARTS[activeIdx]})`;
-            
-            const arrivalTime = startTime + (userStationIdx * MINUTES_PER_STATION);
-            const minutesLeft = arrivalTime - currentTime;
-
-            if (currentTime < arrivalTime) {
-                etaText.innerHTML = `อีก <span style="font-size:1.4em; color:#0056b3;">${Math.ceil(minutesLeft)} นาที</span><br>รถจะมาถึงคุณ`;
-            } else if (currentTime >= arrivalTime && currentTime < arrivalTime + 1) {
-                etaText.innerHTML = `<span style="color:#dc3545;">รถมาถึงสถานีคุณแล้ว!</span>`;
-            } else {
-                etaText.innerHTML = `<span style="color:#6c757d;">รถผ่านสถานีคุณไปแล้ว</span>`;
-            }
-            updateStationTimes(startTime);
-        }
-    }
-
-    // ================= NEW: Schedule Modal Logic =================
-
-    function openSchedule() {
-        const modal = document.getElementById('scheduleModal');
-        const userStationIdx = parseInt(document.getElementById('userStation').value);
-        const modalStationName = document.getElementById('modalStationName');
-        const tbody = document.getElementById('scheduleTableBody');
-        
-        modalStationName.innerText = STATIONS[userStationIdx];
-        tbody.innerHTML = ''; // Clear old data
-
-        const now = new Date();
-        const currentTime = now.getHours() * 60 + now.getMinutes();
-
-        const roundTimesInMinutes = ROUND_STARTS.map(t => {
-            const [h, m] = t.split(':').map(Number);
-            return h * 60 + m;
-        });
-
-        roundTimesInMinutes.forEach((startT, idx) => {
-            // คำนวณเวลาถึงสถานีนั้นๆ (Station Start Time)
-            const arrivalT = startT + (userStationIdx * MINUTES_PER_STATION);
-            
-            const h = Math.floor(arrivalT / 60);
-            const m = arrivalT % 60;
-            const timeStr = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
-
-            const tr = document.createElement('tr');
-            
-            // เช็คสถานะ
-            // รอบที่ 10 (idx 9) คือ 14:05 -> ถึงปลายทาง 14:33
-            // พักเบรคคือ 14:35 - 15:35
-            // รอบถัดไปคือ 15:35 (idx 10)
-            
-            let status = "";
-            if (currentTime > arrivalT + 2) {
-                tr.className = "past";
-                status = "ผ่านไปแล้ว";
-            } else {
-                tr.className = "upcoming";
-                status = "🟢 ยังไม่มา";
-            }
-
-            tr.innerHTML = `
-                <td>${idx + 1}</td>
-                <td>${timeStr}</td>
-                <td>${status}</td>
-            `;
-            tbody.appendChild(tr);
-
-            // แทรกแถวพักเบรคหลังรอบที่ 10
-            if (idx === 9) {
-                const breakRow = document.createElement('tr');
-                breakRow.className = "break";
-                breakRow.innerHTML = `
-                    <td colspan="3">⛔ พักเบรค 14:35 - 15:35 น.</td>
-                `;
-                tbody.appendChild(breakRow);
-            }
-        });
-
-        modal.style.display = "block";
-    }
-
-    function closeSchedule() {
-        document.getElementById('scheduleModal').style.display = "none";
-    }
-
-    // ปิด Modal เมื่อกดพื้นที่ว่าง
-    window.onclick = function(event) {
-        const modal = document.getElementById('scheduleModal');
-        if (event.target == modal) {
-            closeSchedule();
-        }
-    }
-
-    // ================= Helpers =================
-
-    function updateStationTimes(startTimeInMinutes) {
-        STATIONS.forEach((_, idx) => {
-            const timeVal = startTimeInMinutes + (idx * MINUTES_PER_STATION);
-            const h = Math.floor(timeVal / 60);
-            const m = timeVal % 60;
-            const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-            document.getElementById(`time-${idx}`).innerText = timeStr;
-        });
-    }
-
-    function clearStationTimes() {
-        STATIONS.forEach((_, idx) => {
-            document.getElementById(`time-${idx}`).innerText = "--:--";
-        });
-    }
-
-    init();
+build();
+tick();
+setInterval(tick, 1000);
 </script>
 
 </body>
