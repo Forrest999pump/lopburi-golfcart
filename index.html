@@ -17,6 +17,7 @@
     --line:#dfe5ea;
     --line-soft:#eceff2;
     --live:#0d7f63;
+    --live-deep:#0a6650;
     --live-soft:#e6f2ee;
     --hold:#9a6510;
     --hold-soft:#fbf1de;
@@ -26,7 +27,7 @@
   *{box-sizing:border-box;}
 
   body{
-    margin:0;padding:18px 14px 34px;
+    margin:0;padding:14px 14px 84px;
     background:var(--paper);color:var(--ink);
     font-family:'IBM Plex Sans Thai',system-ui,sans-serif;
     font-size:15px;line-height:1.5;
@@ -39,84 +40,68 @@
     border:1px solid var(--line);border-radius:10px;overflow:hidden;
   }
 
-  /* ---------- หัวเรื่อง ---------- */
+  /* ---------- หัวเรื่อง (บางลง) ---------- */
   .masthead{
-    background:var(--ink);color:#fff;padding:14px 18px;
-    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+    background:var(--ink);color:#fff;padding:9px 16px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
   }
-  .masthead h1{margin:0;font-size:16px;font-weight:600;}
+  .masthead h1{
+    margin:0;font-size:13.5px;font-weight:600;letter-spacing:.01em;
+    display:flex;align-items:center;gap:8px;
+  }
   .masthead .site{
-    display:block;font-size:11px;font-weight:400;letter-spacing:.14em;
-    text-transform:uppercase;color:#8fa6b6;margin-bottom:2px;
+    font-size:10px;font-weight:400;letter-spacing:.13em;text-transform:uppercase;
+    color:#8fa6b6;border-left:1px solid #3b4f60;padding-left:8px;
   }
   #clock{
-    font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:500;
+    font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;
     letter-spacing:.04em;color:#d7e2ea;font-variant-numeric:tabular-nums;
   }
 
-  /* ---------- แถบสถานะ ---------- */
-  .status{
-    padding:15px 18px;border-bottom:1px solid var(--line);
-    border-left:4px solid var(--live);background:var(--live-soft);
+  /* ---------- แถบแจ้งเตือน (เฉพาะช่วงงดเดินรถ / หมดรอบ) ---------- */
+  .notice{
+    display:none;align-items:center;gap:8px;
+    padding:9px 16px;font-size:12.5px;font-weight:500;
+    background:var(--hold-soft);color:var(--hold);
+    border-bottom:1px solid var(--line);
   }
-  .status[data-state="waiting"]{border-left-color:var(--focus);background:var(--focus-soft);}
-  .status[data-state="hold"],.status[data-state="closed"]{border-left-color:var(--hold);background:var(--hold-soft);}
+  .notice.on{display:flex;}
+  .notice b{font-family:'IBM Plex Mono',monospace;}
 
-  .status-line{
-    display:flex;align-items:center;gap:8px;
-    font-size:12.5px;font-weight:600;color:var(--ink-2);letter-spacing:.02em;
-  }
-  .beacon{
-    width:9px;height:9px;border-radius:50%;background:var(--live);flex:none;
-    animation:beat 2.4s infinite;
-  }
-  .status[data-state="waiting"] .beacon{background:var(--focus);animation:none;}
-  .status[data-state="hold"] .beacon,.status[data-state="closed"] .beacon{background:var(--hold);animation:none;}
-  @keyframes beat{
-    0%{box-shadow:0 0 0 0 rgba(13,127,99,.45);}
-    70%{box-shadow:0 0 0 9px rgba(13,127,99,0);}
-    100%{box-shadow:0 0 0 0 rgba(13,127,99,0);}
-  }
-
-  .headline{margin-top:7px;font-size:21px;font-weight:600;line-height:1.3;}
-  .headline .num{font-family:'IBM Plex Mono',monospace;font-size:30px;letter-spacing:-.01em;}
-  .sub{margin-top:5px;font-size:13px;color:var(--ink-2);}
-  .sub b{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--ink);}
-
-  /* ---------- หัวตาราง ---------- */
   .board-head{
     display:flex;justify-content:space-between;align-items:baseline;
-    padding:14px 18px 6px;font-size:11px;letter-spacing:.13em;
+    padding:11px 16px 7px;font-size:10.5px;letter-spacing:.13em;
     text-transform:uppercase;color:var(--ink-3);
+    border-bottom:1px solid var(--line-soft);
   }
-  .hint{margin:0;padding:0 18px 8px;font-size:12px;color:var(--ink-3);}
 
   /* ---------- เส้นทาง ---------- */
-  .track{position:relative;padding:2px 16px 12px;}
-  .spine{position:absolute;left:30px;top:16px;bottom:26px;width:2px;background:var(--line);}
+  .track{position:relative;padding:6px 12px 14px;}
+  .spine,.spine-done{position:absolute;left:29px;width:2px;border-radius:2px;}
+  .spine{top:18px;bottom:26px;background:var(--line);}
+  .spine-done{top:18px;height:0;background:var(--live);opacity:.5;transition:height .9s linear;}
 
-  .stop{position:relative;border-bottom:1px solid var(--line-soft);}
+  .stop{position:relative;border-bottom:1px solid var(--line-soft);border-radius:8px;}
   .stop:last-child{border-bottom:0;}
 
   .stop-head{
     width:100%;display:flex;align-items:center;gap:10px;
-    padding:11px 4px 11px 36px;
+    padding:10px 6px 10px 34px;
     background:none;border:0;text-align:left;cursor:pointer;
     font-family:inherit;color:inherit;
   }
-  .stop-head:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:6px;}
+  .stop-head:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:8px;}
 
   .node{
-    position:absolute;left:10px;top:23px;
+    position:absolute;left:9px;top:20px;
     width:10px;height:10px;border-radius:50%;
-    background:var(--surface);border:2px solid var(--line);
+    background:var(--surface);border:2px solid var(--line);z-index:2;
   }
-  .stop.passed .node{background:var(--line);}
-  .stop.passed .name{color:var(--ink-3);}
-  .stop.at-now .node{border-color:var(--live);background:var(--live);}
-  .stop.at-now .name{color:var(--live);font-weight:600;}
 
-  .name{flex:1;font-size:14.5px;min-width:0;}
+  .main{flex:1;min-width:0;}
+  .name{display:block;font-size:14.5px;}
+  .meta{display:none;font-size:12px;line-height:1.4;margin-top:1px;}
+
   .when{text-align:right;flex:none;}
   .when .t{
     display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;
@@ -124,27 +109,65 @@
   }
   .when .in{display:block;font-size:11px;color:var(--ink-3);margin-top:1px;}
   .when .in.soon{color:var(--live);font-weight:600;}
-  .stop.passed .when .t{color:var(--ink-3);}
 
   .chev{flex:none;width:14px;height:14px;color:var(--ink-3);transition:transform .2s ease;}
   .stop.open .chev{transform:rotate(180deg);}
 
+  /* ผ่านไปแล้ว */
+  .stop.passed .node{background:var(--line);}
+  .stop.passed .name{color:var(--ink-3);}
+  .stop.passed .when .t{color:var(--ink-3);}
+
+  /* จุดถัดไปที่รถกำลังมุ่งหน้าไป */
+  .stop.target{background:var(--live-soft);}
+  .stop.target .node{border-color:var(--live);}
+  .stop.target .name{font-weight:600;}
+  .stop.target .when .t{color:var(--live-deep);font-weight:600;}
+
+  /* แถวที่รถอยู่ = แถบสถานะของทั้งหน้า */
+  .stop.live{
+    background:var(--live);
+    box-shadow:0 6px 16px -8px rgba(13,127,99,.9);
+    border-bottom-color:transparent;
+  }
+  .stop.live .node{display:none;}
+  .stop.live .name{color:#fff;font-weight:700;font-size:16px;}
+  .stop.live .meta{display:block;color:rgba(255,255,255,.86);}
+  .stop.live .meta b{font-family:'IBM Plex Mono',monospace;font-weight:600;color:#fff;}
+  .stop.live .when .t{color:#fff;font-weight:600;}
+  .stop.live .when .in{color:rgba(255,255,255,.8);}
+  .stop.live .when .in.soon{color:#fff;}
+  .stop.live .chev{color:rgba(255,255,255,.72);}
+  .stop.live .stop-head{padding-top:12px;padding-bottom:12px;}
+
+  /* จอดรอต้นทาง */
+  .stop.idle{background:var(--focus-soft);}
+  .stop.idle .meta{display:block;color:var(--focus);}
+  .stop.idle .meta b{font-family:'IBM Plex Mono',monospace;font-weight:600;}
+  .stop.idle .name{font-weight:600;color:var(--focus);}
+  .stop.idle .node{display:none;}
+
   /* ---------- แผงเวลาทั้งวัน ---------- */
-  .stop-body{display:none;padding:2px 4px 14px 36px;}
+  .stop-body{display:none;padding:0 6px 14px 34px;}
   .stop.open .stop-body{display:block;animation:slide .18s ease-out;}
   @keyframes slide{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+  .stop.live .stop-body,.stop.idle .stop-body{padding-bottom:16px;}
+  .stop.live .body-note{color:rgba(255,255,255,.75);}
+  .stop.live .r{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.1);}
+  .stop.live .r .no{color:rgba(255,255,255,.7);}
+  .stop.live .r .tm{color:#fff;}
+  .stop.live .r.past{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.18);}
+  .stop.live .r.past .no,.stop.live .r.past .tm{color:rgba(255,255,255,.5);}
+  .stop.live .r.next{background:#fff;border-color:#fff;}
+  .stop.live .r.next .no{color:var(--ink-3);}
+  .stop.live .r.next .tm{color:var(--live-deep);}
+  .stop.live .r-break{background:rgba(255,255,255,.14);color:#fff;}
 
   .body-note{margin:0 0 8px;font-size:11.5px;color:var(--ink-3);}
   .rounds{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px;}
-  .r{
-    border:1px solid var(--line);border-radius:7px;padding:5px 6px 6px;
-    background:var(--surface);text-align:center;
-  }
+  .r{border:1px solid var(--line);border-radius:7px;padding:5px 6px 6px;background:var(--surface);text-align:center;}
   .r .no{display:block;font-size:10px;color:var(--ink-3);letter-spacing:.04em;}
-  .r .tm{
-    display:block;font-family:'IBM Plex Mono',monospace;font-size:14.5px;
-    font-weight:500;font-variant-numeric:tabular-nums;
-  }
+  .r .tm{display:block;font-family:'IBM Plex Mono',monospace;font-size:14.5px;font-weight:500;font-variant-numeric:tabular-nums;}
   .r.past{background:#f5f7f8;border-color:var(--line-soft);}
   .r.past .tm{color:var(--ink-3);}
   .r.next{background:var(--live);border-color:var(--live);}
@@ -159,19 +182,32 @@
 
   /* ---------- รถกอล์ฟ ---------- */
   #cart{
-    position:absolute;left:14px;width:34px;height:34px;
-    display:none;z-index:4;transition:top .9s linear;
-    filter:drop-shadow(0 2px 3px rgba(22,35,46,.28));
+    position:absolute;left:15px;width:30px;height:30px;
+    display:none;z-index:6;transition:top .9s linear;
+    filter:drop-shadow(0 2px 4px rgba(22,35,46,.3));
   }
-  #cart svg{display:block;width:34px;height:34px;}
+  #cart svg{display:block;width:30px;height:30px;}
+  .cart-chip{fill:#fff;stroke:var(--live);stroke-width:2;}
   .cart-body{fill:var(--live);}
-  .cart-outline{fill:none;stroke:var(--surface);stroke-width:3.4;stroke-linejoin:round;}
-  .cart-hub{fill:var(--surface);}
+  #cart.parked .cart-chip{stroke:var(--ink-3);}
   #cart.parked .cart-body{fill:var(--ink-3);}
+
+  /* ---------- ปุ่มกลับไปตามรถ ---------- */
+  #follow{
+    position:fixed;left:50%;bottom:18px;transform:translate(-50%,16px);
+    display:flex;align-items:center;gap:7px;
+    padding:9px 16px;border:0;border-radius:999px;
+    background:var(--ink);color:#fff;cursor:pointer;
+    font-family:inherit;font-size:13px;font-weight:600;
+    box-shadow:0 8px 20px -6px rgba(22,35,46,.55);
+    opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:20;
+  }
+  #follow.on{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
+  #follow svg{width:15px;height:15px;fill:#fff;}
 
   /* ---------- หมายเหตุ ---------- */
   .notes{
-    padding:12px 18px 16px;border-top:1px solid var(--line);background:#f7f9fa;
+    padding:12px 16px 16px;border-top:1px solid var(--line);background:#f7f9fa;
     font-size:12px;line-height:1.6;color:var(--ink-2);
   }
   .notes p{margin:0 0 4px;}
@@ -179,13 +215,12 @@
   .notes span{font-family:'IBM Plex Mono',monospace;}
 
   @media (prefers-reduced-motion:reduce){
-    #cart{transition:none;}
-    .beacon{animation:none;}
+    #cart,.spine-done{transition:none;}
     .stop.open .stop-body{animation:none;}
   }
   @media (max-width:400px){
-    body{padding:10px 8px 24px;}
-    .headline{font-size:19px;}
+    body{padding:8px 8px 84px;}
+    .masthead .site{display:none;}
   }
 </style>
 </head>
@@ -193,44 +228,35 @@
 
 <main class="sheet">
   <header class="masthead">
-    <h1><span class="site">NMB-Minebea · Lopburi</span>รถไฟฟ้ารับ-ส่งในโรงงาน</h1>
+    <h1>รถไฟฟ้ารับ-ส่งในโรงงาน<span class="site">Lopburi</span></h1>
     <div id="clock">--:--:--</div>
   </header>
 
-  <section class="status" id="status" data-state="waiting">
-    <div class="status-line"><span class="beacon"></span><span id="statusText">กำลังอ่านเวลา</span></div>
-    <div class="headline" id="headline">—</div>
-    <div class="sub" id="sub"></div>
-  </section>
+  <div class="notice" id="notice"></div>
 
   <div class="board-head">
     <span>จุดรับ-ส่ง</span>
     <span>รถถึงครั้งถัดไป</span>
   </div>
-  <p class="hint">แตะจุดรับ-ส่งเพื่อดูเวลารถเข้าทั้ง 12 รอบของวัน</p>
 
   <div class="track" id="track">
     <div class="spine"></div>
+    <div class="spine-done" id="spineDone"></div>
 
     <div id="cart" aria-hidden="true">
-      <svg viewBox="0 0 44 32" xmlns="http://www.w3.org/2000/svg">
-        <g class="cart-outline">
-          <path d="M7 4.5h29M9.8 6v9M32.3 6v10M18.7 10.5v6"/>
-          <path d="M6 21h33v-4.4H33.4l-1.6-2.6h-9.7v2.6H6z"/>
-          <circle cx="13" cy="25.5" r="4.2"/>
-          <circle cx="31" cy="25.5" r="4.2"/>
+      <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+        <circle class="cart-chip" cx="20" cy="20" r="18"/>
+        <g class="cart-body" transform="translate(8.5,11.5) scale(0.53)">
+          <rect x="1" y="0" width="40" height="3.4" rx="1.7"/>
+          <rect x="3" y="3" width="3" height="11" rx="1.3"/>
+          <rect x="34" y="3" width="3" height="12" rx="1.3"/>
+          <rect x="13.5" y="7" width="3" height="9" rx="1.3"/>
+          <path d="M1 16h13V13h11.6c.8 0 1.5.4 1.9 1.1l1.6 2.6H41v5.6H1z"/>
+          <circle cx="9.5" cy="26.5" r="4.6"/>
+          <circle cx="31" cy="26.5" r="4.6"/>
         </g>
-        <g class="cart-body">
-          <rect x="6.6" y="3" width="29.8" height="3" rx="1.5"/>
-          <rect x="8.5" y="5.6" width="2.6" height="9.4" rx="1"/>
-          <rect x="31" y="5.6" width="2.6" height="10.4" rx="1"/>
-          <rect x="17.4" y="9.4" width="2.6" height="7.2" rx="1"/>
-          <path d="M6 16.6h16.1V14h9.7c.6 0 1.1.3 1.4.8l1.5 2.4H39V21H6z"/>
-          <circle cx="13" cy="25.5" r="4.2"/>
-          <circle cx="31" cy="25.5" r="4.2"/>
-        </g>
-        <circle class="cart-hub" cx="13" cy="25.5" r="1.5"/>
-        <circle class="cart-hub" cx="31" cy="25.5" r="1.5"/>
+        <circle class="cart-chip" cx="13.5" cy="25.5" r="1.5" stroke-width="0"/>
+        <circle class="cart-chip" cx="25" cy="25.5" r="1.5" stroke-width="0"/>
       </svg>
     </div>
 
@@ -243,6 +269,11 @@
     <p>เวลาที่แสดงอ้างอิงตารางเดินรถ อาจคลาดเคลื่อนตามสภาพการจราจรภายในโรงงาน</p>
   </footer>
 </main>
+
+<button id="follow" type="button">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21 5 4l7 3 7-3z"/></svg>
+  ตามตำแหน่งรถ
+</button>
 
 <script>
 /* ============================================================
@@ -282,16 +313,19 @@ const hhmm  = v => String(Math.floor(v/60)%24).padStart(2,'0')+':'+String(Math.r
 const STARTS = ROUNDS.map(toMin);
 
 const el = {
-  clock:    document.getElementById('clock'),
-  status:   document.getElementById('status'),
-  text:     document.getElementById('statusText'),
-  headline: document.getElementById('headline'),
-  sub:      document.getElementById('sub'),
-  list:     document.getElementById('stops'),
-  cart:     document.getElementById('cart')
+  clock:  document.getElementById('clock'),
+  notice: document.getElementById('notice'),
+  list:   document.getElementById('stops'),
+  cart:   document.getElementById('cart'),
+  done:   document.getElementById('spineDone'),
+  follow: document.getElementById('follow')
 };
 
-let openIndex = -1;
+let openIndex   = -1;
+let following   = true;   // เลื่อนจอตามรถอัตโนมัติ
+let lastFocus   = -1;
+let selfScroll  = false;  // กันไม่ให้การเลื่อนของระบบไปปิดโหมดตามรถ
+let selfTimer;
 
 /* ---------- สร้างรายการจุดรับ-ส่ง ---------- */
 function build(){
@@ -302,7 +336,7 @@ function build(){
     wrap.innerHTML =
       '<span class="node"></span>' +
       '<button class="stop-head" type="button" aria-expanded="false" aria-controls="body-'+i+'">' +
-        '<span class="name">'+s.name+'</span>' +
+        '<span class="main"><span class="name">'+s.name+'</span><span class="meta" id="meta-'+i+'"></span></span>' +
         '<span class="when"><span class="t" id="t-'+i+'">--:--</span><span class="in" id="in-'+i+'"></span></span>' +
         '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>' +
       '</button>' +
@@ -315,11 +349,12 @@ function build(){
     fillRounds(i);
   });
 
-  // QR ของแต่ละป้ายเปิดจุดนั้นให้เลย เช่น ?s=8
+  // QR ของแต่ละป้าย เช่น ?s=8 → เปิดจุดนั้นค้างไว้ และหยุดตามรถจนกว่าผู้ใช้จะกดปุ่ม
   const q = parseInt(new URLSearchParams(location.search).get('s'),10);
   if (!isNaN(q) && q>=0 && q<STOPS.length){
     toggle(q);
-    setTimeout(()=>document.getElementById('stop-'+q).scrollIntoView({behavior:'smooth',block:'center'}),300);
+    following = false;
+    setTimeout(()=>scrollTo(q),300);
   }
 }
 
@@ -352,6 +387,23 @@ function fillRounds(i){
   });
 }
 
+/* ---------- เลื่อนจอตามรถ ---------- */
+function scrollTo(i){
+  selfScroll = true;
+  clearTimeout(selfTimer);
+  document.getElementById('stop-'+i).scrollIntoView({behavior:'smooth',block:'center'});
+  selfTimer = setTimeout(()=>{ selfScroll = false; }, 1200);
+}
+window.addEventListener('scroll', ()=>{
+  if (selfScroll) return;
+  if (following){ following = false; el.follow.classList.add('on'); }
+}, {passive:true});
+el.follow.addEventListener('click', ()=>{
+  following = true;
+  el.follow.classList.remove('on');
+  if (lastFocus > -1) scrollTo(lastFocus);
+});
+
 /* ---------- อัปเดตทุกวินาที ---------- */
 function tick(){
   const now = new Date();
@@ -360,33 +412,62 @@ function tick(){
 
   const running = STARTS.findIndex(s => t >= s && t < s + LAST + DWELL);
   const next    = STARTS.findIndex(s => s > t);
+  const hold    = running === -1 && t >= HOLD_START && t < HOLD_END;
 
-  paintStops(t, running);
+  paintNotice(running, next, hold);
+  const focus = paintStops(t, running, next, hold);
   paintRounds(t);
+  moveCart(t, running, hold);
 
-  if (running > -1)                    return statusRunning(running, t);
-  if (t >= HOLD_START && t < HOLD_END) return statusHold();
-  if (next > -1)                       return statusWaiting(next, t);
-  statusClosed();
+  if (focus > -1 && focus !== lastFocus){
+    lastFocus = focus;
+    if (following) scrollTo(focus);
+  }
 }
 
-function paintStops(t, running){
+function paintNotice(running, next, hold){
+  if (hold){
+    el.notice.className = 'notice on';
+    el.notice.innerHTML = '⏸ งดเดินรถ <b>14:35 – 15:35</b> น. · เริ่มวิ่งอีกครั้ง <b>15:35</b>';
+  } else if (running === -1 && next === -1){
+    el.notice.className = 'notice on';
+    el.notice.innerHTML = '🌙 สิ้นสุดการเดินรถของวันนี้ · รอบแรกพรุ่งนี้ <b>08:04</b> น.';
+  } else {
+    el.notice.className = 'notice';
+    el.notice.innerHTML = '';
+  }
+}
+
+/* คืนค่า index ของแถวที่ควรอยู่กลางจอ */
+function paintStops(t, running, next, hold){
+  let focus = -1, here = -1, target = -1;
+
+  if (running > -1){
+    const elapsed = t - STARTS[running];
+    STOPS.forEach((s,i)=>{ if (elapsed >= s.offset) here = i; });
+    const atStop = elapsed < STOPS[here].offset + DWELL;
+    if (!atStop && here < STOPS.length-1) target = here + 1;
+    focus = atStop ? here : (target > -1 ? target : here);
+  }
+
   STOPS.forEach((s,i)=>{
-    const wrap  = document.getElementById('stop-'+i);
-    const tEl   = document.getElementById('t-'+i);
-    const inEl  = document.getElementById('in-'+i);
-    const next  = STARTS.map(x=>x+s.offset).find(a => t < a + DWELL);
+    const wrap = document.getElementById('stop-'+i);
+    const tEl  = document.getElementById('t-'+i);
+    const inEl = document.getElementById('in-'+i);
+    const mEl  = document.getElementById('meta-'+i);
+    const arr  = STARTS.map(x=>x+s.offset).find(a => t < a + DWELL);
 
-    wrap.classList.remove('passed','at-now');
+    wrap.className = 'stop' + (wrap.classList.contains('open') ? ' open' : '');
+    mEl.innerHTML = '';
 
-    if (next === undefined){
+    if (arr === undefined){
       tEl.textContent  = '—';
       inEl.textContent = 'หมดรอบวันนี้';
       inEl.className   = 'in';
       wrap.classList.add('passed');
     } else {
-      const left = next - t;
-      tEl.textContent = hhmm(next);
+      const left = arr - t;
+      tEl.textContent = hhmm(arr);
       if (left <= 0){ inEl.textContent = 'รถอยู่ที่จุดนี้'; inEl.className = 'in soon'; }
       else if (left <= 30){ inEl.textContent = 'อีก '+Math.ceil(left)+' นาที'; inEl.className = left <= 10 ? 'in soon' : 'in'; }
       else { inEl.textContent = ''; inEl.className = 'in'; }
@@ -394,12 +475,31 @@ function paintStops(t, running){
 
     if (running > -1){
       const elapsed = t - STARTS[running];
-      if (elapsed >= s.offset + DWELL) wrap.classList.add('passed');
-      if (elapsed >= s.offset && elapsed < s.offset + DWELL) wrap.classList.add('at-now');
+      if (elapsed >= s.offset + DWELL && i !== here) wrap.classList.add('passed');
+      if (i === here && elapsed < s.offset + DWELL){
+        wrap.classList.add('live');
+        const rest = STOPS.filter(x => elapsed < x.offset).length;
+        mEl.innerHTML = 'รอบ '+(running+1)+' · รถจอดอยู่ที่นี่ · ออก <b>'+hhmm(STARTS[running]+s.offset+DWELL)+'</b>'
+          + (rest ? ' · เหลืออีก '+rest+' จุด' : '');
+      }
+      if (i === target){
+        wrap.classList.add('live');
+        const rest = STOPS.filter(x => elapsed < x.offset).length;
+        mEl.innerHTML = 'รอบ '+(running+1)+' · รถกำลังมาที่นี่ · ถึงโรงรถ <b>'+hhmm(STARTS[running]+LAST)+'</b>'
+          + (rest > 1 ? ' · เหลืออีก '+rest+' จุด' : '');
+      }
+      if (i === here && target > -1) wrap.classList.add('passed');
+      if (target > -1 && i === target + 1) wrap.classList.add('target');
+      if (target === -1 && here > -1 && i === here + 1) wrap.classList.add('target');
+    } else if (i === 0 && !hold && next > -1){
+      wrap.classList.add('idle');
+      mEl.innerHTML = 'รถจอดรอที่ต้นทาง · ออกรอบ '+(next+1)+' เวลา <b>'+ROUNDS[next]+'</b> · อีก '
+        + Math.max(1,Math.ceil(STARTS[next]-t)) + ' นาที';
+      focus = 0;
     }
   });
 
-  moveCart(t, running);
+  return focus;
 }
 
 function paintRounds(t){
@@ -420,13 +520,14 @@ function headCenter(i){
   return wrap.offsetTop + wrap.querySelector('.stop-head').offsetHeight/2;
 }
 
-function moveCart(t, running){
+function moveCart(t, running, hold){
   if (running === -1){
     const hasNext = STARTS.some(s => s > t);
-    if (!hasNext || (t >= HOLD_START && t < HOLD_END)){ el.cart.style.display = 'none'; return; }
+    if (!hasNext || hold){ el.cart.style.display = 'none'; el.done.style.height = '0px'; return; }
     el.cart.style.display = 'block';
     el.cart.classList.add('parked');
-    el.cart.style.top = (headCenter(0) - 17) + 'px';
+    el.cart.style.top = (headCenter(0) - 15) + 'px';
+    el.done.style.height = '0px';
     return;
   }
 
@@ -439,57 +540,14 @@ function moveCart(t, running){
   }
   el.cart.style.display = 'block';
   el.cart.classList.remove('parked');
-  el.cart.style.top = (pos - 17) + 'px';
-}
-
-/* ---------- แถบสถานะด้านบน ---------- */
-function statusRunning(idx, t){
-  const start = STARTS[idx], elapsed = t - start;
-  el.status.dataset.state = 'running';
-  el.text.textContent = 'รถกำลังวิ่ง · รอบ '+(idx+1)+' ออก '+ROUNDS[idx]+' น.';
-
-  let here = 0;
-  STOPS.forEach((s,i)=>{ if (elapsed >= s.offset) here = i; });
-
-  if (elapsed < STOPS[here].offset + DWELL){
-    el.headline.textContent = 'จอดอยู่ที่ ' + STOPS[here].name;
-  } else if (here < STOPS.length-1){
-    el.headline.innerHTML = 'กำลังไป ' + STOPS[here+1].name +
-      ' · <span class="num">'+hhmm(start+STOPS[here+1].offset)+'</span>';
-  } else {
-    el.headline.textContent = 'ถึงโรงรถแล้ว · จบรอบ';
-  }
-
-  const rest = STOPS.filter(s => elapsed < s.offset).length;
-  el.sub.innerHTML = rest
-    ? 'เหลืออีก '+rest+' จุดในรอบนี้ · ถึงโรงรถ <b>'+hhmm(start+LAST)+'</b>'
-    : 'ทำความสะอาดเบาะที่นั่งก่อนออกรอบถัดไป';
-}
-
-function statusWaiting(next, t){
-  el.status.dataset.state = 'waiting';
-  el.text.textContent = 'รถจอดรอที่ต้นทาง ป้อม-1';
-  el.headline.innerHTML = 'ออกรอบ '+(next+1)+' เวลา <span class="num">'+ROUNDS[next]+'</span>';
-  el.sub.innerHTML = 'อีก <b>'+Math.max(1,Math.ceil(STARTS[next]-t))+'</b> นาที · แตะจุดของคุณเพื่อดูเวลารถเข้า';
-}
-
-function statusHold(){
-  el.status.dataset.state = 'hold';
-  el.text.textContent = 'งดเดินรถชั่วคราว';
-  el.headline.innerHTML = 'เริ่มวิ่งอีกครั้ง <span class="num">15:35</span>';
-  el.sub.innerHTML = 'ช่วง <b>14:35 – 15:35</b> เป็นเวลาห้ามรถวิ่งในโรงงาน (รถบัสรับ-ส่งกะ)';
-}
-
-function statusClosed(){
-  el.status.dataset.state = 'closed';
-  el.text.textContent = 'สิ้นสุดการเดินรถของวันนี้';
-  el.headline.innerHTML = 'รอบแรกพรุ่งนี้ <span class="num">08:04</span>';
-  el.sub.textContent = 'วันทำงานเดินรถ 12 รอบ ตั้งแต่ 08:04 ถึง 16:47 น.';
+  el.cart.style.top = (pos - 15) + 'px';
+  el.done.style.height = Math.max(0, pos - 18) + 'px';
 }
 
 build();
 tick();
 setInterval(tick, 1000);
+setTimeout(()=>{ if (following && lastFocus > -1) scrollTo(lastFocus); }, 400);
 </script>
 
 </body>
